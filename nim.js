@@ -89,7 +89,15 @@
                                 return _err('Response status was ' + res.statusCode);
                             }
                             res.pipe(f);
-                            f.on('finish', ((ii,ff) => { return () => { _log(list[ii],' done.'); ff.close(); inProg[ii]=false;  }})(ii,f) );
+                            f.on('finish', ((ii,ff) => { return () => { 
+                             let fn=list[ii];
+                             _log(fn,' done.'); 
+                             ff.close();                          
+                             if (fn.startsWith('iojs')) {
+                                 //_log('link to: ',dir+'/'+fn.replace('iojs','node'));
+                                 fs.linkSync(dir+'/'+fn, dir+'/'+fn.replace('iojs','node'))
+                             }
+                             inProg[ii]=false;  }})(ii,f) );
                        }})(file,fPath,i));
                         req.on ('error', (err) => { endErr(err); });
                         file.on('error', (err) => { endErr(err); });
