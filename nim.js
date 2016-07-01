@@ -61,7 +61,7 @@
     }
     ,       downloadFiles   =   (url,dir,list)  =>  {
              try { 
-                _log('download files from: ',url, 'to ',dir);
+                //_log('download files from: ',url, ' --> ',dir);
                 request.head(url,(err, res, body) => {
                     if (!err && res.statusCode == 200) {
                      var inProg = []  
@@ -73,7 +73,7 @@
                         try { fs.mkdirSync(vDir); }catch (_e) {}
                         fs.mkdirSync(dir); 
                      }
-                     catch (e){ if (e.code!='EEXIST'){ _err(e);  return; } }
+                     catch (e){ if (e.code!='EEXIST'){ _err(e);  return -1; } }
                      
                      for (i in list) {
                        inProg[i]=true;  
@@ -102,15 +102,16 @@
                      }   
                      , () =>{
                          _log('DONE');
+                         return 0;
                      });
                     }
                     else {
-                     // fallback for x86 on base folder
-                     _log('fallback for x86 ..')
+                     return res.statusCode;
                     }
                 });
              } 
-             catch (ex) { _err(ex); }
+             catch (ex) { _err(ex,-123); }
+             return -1;
     }
     ;
 
@@ -179,15 +180,19 @@
                     try {
                         ver     = fs.readlinkSync   (nodeFolder);
                         p1      = ver.lastIndexOf   (pathSep);
+                        arch    = ver.substring  (   p1+1);                          //get arch
+                        ver     = ver.substring  (0, p1  );                          //strip arch
+                        ver     = ver.substring  (   ver.lastIndexOf    (pathSep)+1); //strip base path
+                        p1      = arch.lastIndexOf('-')
+                        arch    = p1<0? arch : arch.substring(   p1+1);             //arch
+                        _log('in use:',ver , arch);
                     } 
-                    catch (ee){ _log("sorry: can't find any version installed!"); return -1; }
+                    catch (ee){ 
+                     //_log("sorry: can't find any version in use!"); return -1; 
+                     
+                    }
                 
-                arch    = ver.substring  (   p1+1);                          //get arch
-                ver     = ver.substring  (0, p1  );                          //strip arch
-                ver     = ver.substring  (   ver.lastIndexOf    (pathSep)+1); //strip base path
-                p1      = arch.lastIndexOf('-')
-                arch    = p1<0? arch : arch.substring(   p1+1);             //arch
-                _log('ver:',ver , arch);
+               
                 try {
                      files = fs.readdirSync(nodeStoreDir);
                     if (files[0].name) {/* force err if not present */}
@@ -267,20 +272,31 @@
                 request.head(nodeDistBase+vPath,function (err, response, body) {
                    
                     if (!err && response.statusCode == 200) {
-                        vPath+=arch;
-                        return downloadFiles(nodeDistBase+vPath,nodeStoreDir+vPath,nodeRequired);
+                        let a
+                        ,   vDir
+                        ,   archs = validArchPaths.win[arch.endsWith('64')?1:0]
+                        for (a in archs) {
+                         vDir=vPath+archs[a];    
+                         downloadFiles(nodeDistBase+vDir,nodeStoreDir+vDir,nodeRequired);
+                        }
                     }
                     else {
                         notFnd1 = true;
                         saySorry();
-                    } 
+                    }
+                    
                 });
         
                 request.head(iojsDistBase+vPath,function (err, response, body) {
                     if (!err && response.statusCode == 200) {
-                        _log('found at iojs')
-                        vPath+=arch;
-                        return downloadFiles(iojsDistBase+vPath,nodeStoreDir+vPath,iojsRequired);
+                     let a
+                        ,   vDir
+                        ,   archs = validArchPaths.win[arch.endsWith('64')?1:0]
+                        for (a in archs) {
+                         vDir=vPath+archs[a];    
+                         downloadFiles(iojsDistBase+vDir,nodeStoreDir+vDir,iojsRequired);
+                        }
+                         
                     }
                     else {
                         notFnd2 = true;
