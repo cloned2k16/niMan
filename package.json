@@ -1,0 +1,32 @@
+{
+        "name"              :   "miN-Nim"
+    ,   "description"       :   "A Flexible Version Manager for Node JS (aka jsNVM > NVM++)"
+    ,   "version"           :   "0.0.1"
+    ,   "license"           :   "MIT"
+    ,   "main"              :   "boot.js"
+    ,   "dependencies"      :   {
+                                    "pad_left"  :   ""
+                                ,   "w4it"      :   ""
+                                ,   "request"   :   ""
+                                ,   "express"   :   ""
+                                ,   "morgan"    :   ""
+                                ,   "socket.io" :   ""
+                            }    
+    ,   "scripts"           :   {
+                                    "test"      :   "nmp test"
+                            }
+    ,   "repository"        :   {
+                                    "type"      :   "git"
+                                ,   "url"       :   "https://github.com/cloned2k16/miN-Nim"
+                            }
+    ,   "keywords"          :   [
+                                    "NVM"
+                                ,   "NPM"
+                                ,   "NodeJs"
+                                ,   "Node"
+                                ,   "Installer"
+                                ,   "Version"
+                                ,   "Manager"
+                                ]
+    ,   "author"            :   "Paolo Lioy"
+}

@@ -1,0 +1,122 @@
+            body                    { 
+               
+                margin-top          :   10px;
+                padding             :   0;
+            } 
+            
+            a {
+                color               :   inherit;
+                text-decoration     :   none;
+            }
+
+            table                   {
+                vertical-align      :   top;    
+                display             :   inline-block;
+                margin-left         :   auto;
+                margin-right        :   auto;
+                padding-left        :   13px;
+            }
+            
+            #inUse                  {
+            }
+            
+            
+            #list th                {
+                padding-right       :   33px;
+            }
+
+            th                      { 
+                text-align          :   left;
+                height              :   32px;
+                background-color    :   #EEE;
+                vertical-align      :   middle;
+                font-family         :   Times, Arial;
+                padding-left        :   3px;
+                padding-right       :   7px;
+                border-bottom       :   1px solid #ddd;
+                border-right        :   1px solid #888;
+            }
+
+            td                      {
+                font-style          :   italic;            
+                background-color    :   #F0F4F8;
+                border-bottom       :   1px solid #ddd;
+                border-right        :   1px solid #888;
+            }
+            
+            #svgDiv                 {
+                background-color    :   #F8F8F8;
+                position            :   relative;
+                height              :   180px;
+                display             :   block;
+            }
+            .yearMark               {
+                background-color    :   #008;
+                position            :   absolute;
+                width               :   1px;
+                display             :   block;
+            }
+            
+            .verLab                 {
+                background-color    :   #CCC;
+                position            :   absolute;
+                display             :   block;
+                padding             :   4px;
+                border-top          :   1px solid #aaa;
+                border-left         :   1px solid #aaa;
+                border-bottom       :   2px solid #888;
+                border-right        :   2px solid #888;
+                
+            }
+            .verLab:hover           {
+                cursor              :   pointer;
+            }
+            
+            .altLabl                {
+                visibility          :   hidden;
+                z-index             :   11;
+                background-color    :   #FF8;
+                position            :   absolute;
+                display             :   block;
+                padding             :   4px;
+                border-top          :   1px solid #aaa;
+                border-left         :   1px solid #aaa;
+                border-bottom       :   2px solid #888;
+                border-right        :   2px solid #888;
+                
+            }
+
+            
+            .letter                 {
+                background          :   #EEFFEE;
+                box-shadow          :   0 11px 11px rgba(0,0,0,0.3);
+                margin              :   7px auto 0;
+                max-width           :   640px;
+                min-height          :   240px;
+                padding             :   9px;
+                position            :   relative;
+            }
+            
+            .letter:before      
+        ,   .letter:after           {
+                content             :   '';
+                height              :   99%;
+                position            :   absolute;
+                width               :   99%;
+                z-index             :   -1;
+            }
+            
+            .letter:before          {
+                background          :   #4FD3F8;
+                box-shadow          :   0 7px 7px rgba(0,0,0,0.2);
+                left                :   -7px;
+                top                 :   5px;
+                transform           :   rotate(-2.22deg);
+            }
+            .letter:after {
+                background          :   #FAB0EE;
+                box-shadow          :   0 7px 7px rgba(0,0,0,0.3);
+                right               :   -7px;
+                top                 :   -2px;
+                transform           :   rotate(1.764deg);
+            }
