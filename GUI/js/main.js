@@ -170,7 +170,7 @@
         
         for (i=0; i<len; i++) {
          var val =   values[len-i-1];
-         y = H-numeric(val.version)   / 100000000*H *1.25
+         y = H-numeric(val.version)   / 100000000*H *1.01
          x = (new Date(val.date).getTime()-min) * step
          
          
