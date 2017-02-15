@@ -1,0 +1,4 @@
+@call npm install
+
+@pause
+
