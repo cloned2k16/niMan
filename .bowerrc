@@ -1,0 +1,11 @@
+{
+        "directory"         : "js-libs/"
+    ,   "timeout"           : 1234567
+    ,   "registry"          : {
+            "search": [
+                    "https://bower.herokuapp.com"
+                ,   "http://localhost:8000"
+            ]
+    }
+}
+ 

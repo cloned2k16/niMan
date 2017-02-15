@@ -3,7 +3,7 @@
 var W4it        =   { 
                         name:       'Wait For It (aka W4it)' 
                     ,   desc:       'A module handling Async Wait Sleep etc..'
-                    ,   version:    '0.0.7'
+                    ,   version:    '0.0.8'
                     ,   Anima:      false
                     ,   _out:       this
                     };
@@ -70,7 +70,7 @@ else W4it.write     =   function () { /*black hole*/ }
                         ,   frm = cnt % len
                         ,   pos = frm >= (len>>1) ? len - frm - 1 : frm
                         ;
-                    if(!doneFn() && W4it.Anima ) W4it._out.write(aNiMeD[pos]+'\r');
+                    if(!doneFn() && W4it.Anima ) W4it._out.write(aNiMeD[pos]+'\x1b[0G');
                     to=0;
                 },16);
             } 

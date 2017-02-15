@@ -1,0 +1,21 @@
+{
+        "name"          :   "nimmin-gui"
+    ,   "description"   :   "A simple Node Version Manager written in Javascript"
+    ,   "main"          :   "main.js"
+    ,   "authors"       : [ "Paolo Lioy" ]
+    ,   "license"       :   "CC-BY-NC-4.0"
+    ,   "keywords"      : [ "NVM", "W4it" ]
+    ,   "homepage"      :   "https://github.com/cloned2k16/"
+    ,   "ignore"        : [
+                            "**/.*"
+                        ,   "node_modules"
+                        ,   "js-libs"
+                        ]
+                        
+    ,   "dependencies"  : {
+                            "w4it"              :   ""
+                        ,   "string_prototypes" :   ""
+                        ,   "left_pad"          :   ""
+                        ,   "doc_ready"         :   ""
+                        }
+}

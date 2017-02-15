@@ -11,11 +11,25 @@ var _String_Prototypes  =   {
                         // 'str.'.endsWith      ('r.')      ->      true
                         // 'str.'.includes      ('tr')      ->      true
                         
-                        // '
+                        // 'file.com'.subStr    (-4)        ->      '.com'
+                        // 'file.com'.subStr    (-3,-1)     ->      '.'
+                        // 'file.com'.subStr    (-4, 1)     ->      '.'
+                        // 'file.com'.subStr    ( 4,-4)     ->      'file'
 
 _String_Prototypes.apply = function (scope) {
-    var th = scope.String.prototype
+    var ND // undefined
+    ,   th  = scope.String.prototype
+    ,   sbs = 'substring'
+    ,   ln  = 'length'
     ;
+    
+    if (!   th.subStr       )   { // handy extension to substring funcionality  subStr(-3) subStr(-3,2)
+            th.subStr  =    function subStr (st,len) {
+                var s = st  == ND ? 0         : st  < 0 ? this[ln]+st : st;
+                var e = len == ND ? this[ln]  : len < 0 ? s+len       : st < 0 ? s+len : len;
+                return this[sbs](s,e);
+            }    
+    }
     
     if (!   th.repeat       )   { // ES6 ! 
             th.repeat   =   function repeat (n) {
