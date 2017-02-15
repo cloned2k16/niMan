@@ -1,7 +1,7 @@
 {
         "name"              :   "miN-Nim"
     ,   "description"       :   "A Flexible Version Manager for Node JS (aka jsNVM > NVM++)"
-    ,   "version"           :   "0.0.1"
+    ,   "version"           :   "0.0.2"
     ,   "license"           :   "MIT"
     ,   "main"              :   "boot.js"
     ,   "dependencies"      :   {
