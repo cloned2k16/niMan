@@ -7,7 +7,7 @@
 
     const
             info            =   {
-                                version :   '0.0.1'
+                                version :   '0.0.2'
                             ,   desc    :   'Node Installation Manager aka NVM++'
                             }
     ,       path            =   require ('path')
@@ -36,6 +36,10 @@
     ,       nodeFolder      =   './inuse/'          // default location
     ,       nodeExtens      =   '.exe'
     ,       nodeStoreDir    =   './dist/'
+    ,       nodeCacheFile   =   'node_dist.json'
+    ,       nodeCacheList   =   'node_dist.lst'
+    ,       iojsCacheFile   =   'iojs_dist.json'
+    ,       iojsCacheList   =   'iojs_dist.lst'
     ,       nodeDistBase    =   'https://nodejs.org/dist/'
     ,       iojsDistBase    =   'https://iojs.org/dist/'
     ,       _log            =   (...args)       =>  { Function.apply.call(console.log   ,console,args); }
@@ -205,73 +209,81 @@
                     
                     
                     request.get(nodeVerURL, function (err, response, body) {
-try{
-                        if (!err && response.statusCode == 200) {
-                            fs.writeFile("node_dist.json", body, function(err) { 
-                             if(err) {  _.log(err); } 
-                            }); 
+                        try{
+                            if (!err && response.statusCode == 200) {
+                                fs.writeFile(nodeCacheFile, body, function(err) { 
+                                    if(err) {  _.log(err); } 
+                                    else {
+                                        var guiCacheFile='.'+_.PUBLIC_HTML+'/'+nodeCacheFile
+                                        fs.writeFileSync(guiCacheFile, fs.readFileSync(nodeCacheFile));
+                                    }
+                                }); 
                             
-                            var res     =   JSON.parse(body);
-                            _.nodeList  =   res;
+                                var res     =   JSON.parse(body);
+                                _.nodeList  =   res;
         
-                            var vList   =   ""
-                            ,   stable  =   []
-                            ,   lts     =   []
-                            ;
-                            for (var v in res) { 
-                                var ver=res[v]; 
-                                if (!ver.lts) stable.push(ver);
-                                else          lts   .push(ver);
-                                vList+= strFormat('  %s\t\t[%s]\t\t%s\t\t%s\r\n',ver.version ,ver.lts?ver.lts:'',ver.date,ver.npm); 
+                                var vList   =   ""
+                                ,   stable  =   []
+                                ,   lts     =   []
+                                ;
+                                for (var v in res) { 
+                                    var ver=res[v]; 
+                                    if (!ver.lts) stable.push(ver);
+                                    else          lts   .push(ver);
+                                    vList+= strFormat('  %s\t\t[%s]\t\t%s\t\t%s\r\n',ver.version ,ver.lts?ver.lts:'',ver.date,ver.npm); 
+                                }
+        
+                                fs.writeFile(nodeCacheList, vList, function(err) {
+                                    if(err) { _.log(err); }
+                                }); 
+        
                             }
-        
-                            fs.writeFile("node_dist.lst", vList, function(err) {
-                                if(err) { _.log(err); }
-                            }); 
-        
+                            else { 
+                                _.err (response.statusCode,err,_.log.error); 
+                                _.nodeError = { 'RES' : response , 'ERR' : err };
+                            }   
                         }
-                        else { 
-                            _.err (response.statusCode,err,_.log.error); 
-                            _.nodeError = { 'RES' : response , 'ERR' : err };
-                        }   
-}
-catch ( e ){
-    _.log("EXCEPTION: ",e);
-}
+                        catch ( e ){
+                            _.log("EXCEPTION: ",e);
+                        }
                         _.nodeReqInProgress = false;
                     });
                     
                     request.get(iojsVerURL, function (err, response, body) {
-try{
-                        if (!err && response.statusCode == 200) {
-                            fs.writeFile("iojs_dist.json", body, function(err) {
-                                if(err) { _.log(err); }
-                            }); 
+                        try{
+                            if (!err && response.statusCode == 200) {
+                                fs.writeFile(iojsCacheFile, body, function(err) {
+                                    if(err) { _.log(err); }
+                                    else {
+                                        var guiCacheFile='.'+_.PUBLIC_HTML+'/'+iojsCacheFile
+                                        fs.writeFileSync(guiCacheFile, fs.readFileSync(iojsCacheFile));
+                                    }
+                                }); 
         
-                            var res     =   JSON.parse(body)
-                            ,   vList   =   ""
-                            ;
-                            _.iojsList  =   res;
+                                var res     =   JSON.parse(body)
+                                ,   vList   =   ""
+                                ;
+                                _.iojsList  =   res;
         
                        
-                            for (var v in res) { 
-                                var ver=res[v]; 
-                                vList+= strFormat('  %s\t\t%s\t\t%s\r\n',ver.version, ver.date, ver.npm); 
+                                for (var v in res) { 
+                                    var ver=res[v]; 
+                                    vList+= strFormat('  %s\t\t%s\t\t%s\r\n',ver.version, ver.date, ver.npm); 
+                                }
+            
+                                fs.writeFile(iojsCacheList, vList, function(err) { 
+                                    if(err) {  _.log(err); } 
+                                });
+            
                             }
-            
-                            fs.writeFile("iojs_dist.lst", vList, function(err) { 
-                                if(err) {  _.log(err); } 
-                            });
-            
+                            else { 
+                                _.log (response.statusCode,err ,_.log.error); 
+                                _.iojsError = { 'RES' : response , 'ERR' : err };
+                            }   
                         }
-                        else { 
-                            _.log (response.statusCode,err ,_.log.error); 
-                            _.iojsError = { 'RES' : response , 'ERR' : err };
-                        }   
-}
-catch (e) {
-    _.log("Exception: ",e);
-}                        
+                        catch (e) {
+                            _.log("Exception: ",e);
+                        }                        
                         _.iojsReqInProgress = false;
                     });
 

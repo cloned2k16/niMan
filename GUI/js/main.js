@@ -281,7 +281,7 @@
             );
             
     
-            _Ajax ('nodeList.json'  //'http://nodejs.org/dist/index.json' 
+            _Ajax ('node_dist.json'  //'http://nodejs.org/dist/index.json' 
             , function (res) { 
                 var list        =   JSON.parse(res);
                     nodeList    =   list;
@@ -292,7 +292,7 @@
             , function (err) { nodeError=err; _log('ERR:',err); onAcquiredLists(); }
             );
             
-            _Ajax ('iojsList.json'  //'https://iojs.org/dist/index.json'
+            _Ajax ('iojs_dist.json'  //'https://iojs.org/dist/index.json'
             , function (res) { 
                 var list        =   JSON.parse(res);
                     iojsList    =   list;

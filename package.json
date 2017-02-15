@@ -13,7 +13,7 @@
                                 ,   "socket.io" :   ""
                             }    
     ,   "scripts"           :   {
-                                    "test"      :   "nmp test"
+                                    "test"      :   "nim list available"
                             }
     ,   "repository"        :   {
                                     "type"      :   "git"
