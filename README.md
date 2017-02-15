@@ -20,3 +20,4 @@ type
   then list most up to date version for each branch  7.x.x .. 6.x.x ... etc..  
   
   
+![](demo.gif)
