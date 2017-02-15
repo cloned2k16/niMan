@@ -11,11 +11,11 @@ WARNING:
 # Installation - Usage
 
 type  
-*  NPM install
-*  nim list available
+*  build  
+  which would install required packages either for nodejs and for the GUI  
   
-  which would install required packages  
-  then download the owned private version of nodeJs (used by niM-Min)  
+*  nim list available  
+  which would download the owned private version of nodeJs (if not already)  
   then list most up to date version for each branch  7.x.x .. 6.x.x ... etc..  
   
   
