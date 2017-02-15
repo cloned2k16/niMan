@@ -71,6 +71,7 @@
                         break;
         default:                                
                         //ERROR!!!
+            exit("unknown 'architecture' ... ");
     }
     
     // our App runs with its own copy of Node installed in myNodePath/node
@@ -98,11 +99,6 @@
      catch (err)    { exit("sorry can't download Node:",err); }
     }
 
-    try {
-        
-    }   
-    catch (err)     { 
-    }    
     
     w4it.enableAnimation();
     w4it.done(function () { return !dwnInProg1 && !dwnInProg2; }
@@ -113,7 +109,7 @@
                 argss.splice(0,1);      // remove node
                 argss[0] = bootFile;    // replace myself
                 
-                //_log("exec:",cmdLine,args);
+                _log("exec:",cmdLine,args);
                 var child=childProc.spawn(cmdLine,argss,{  stdio: 'inherit' } );
                 child.on('error',function (err) { _err(err);    me.exit(-123);  });
                 child.on('exit', function (code){               me.exit(code)   });
