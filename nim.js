@@ -50,23 +50,20 @@
     ,       usage           =   ()              =>  {
         _log('Usage:');
         _log('');
-        _log('   '+NIM+' arch                        : Show whichever arch node is using.'                              );
-        _log('   '+NIM+' install <version> [arch]    : The version can be any Node version either from NodeJs of IOJS'  );
-        _log('                                           see: http://cloned2k16.github.io/jsNVM/'                       );
-        _log('   '+NIM+' list [available]            : List the current installation list or the availables to download');
-        //_log('   '+NIM+' on                          : Enable  this version management');
-        //_log('   '+NIM+' off                         : Disable this version management');
-        _log('   '+NIM+' remove  <version> [arch]    : Uninstall specified version'                                     );
-        _log('   '+NIM+' use     <version> [arch]    : Switch to the specified version and optionally arch'             );
-        //_log('   '+NIM+' root [path]                 : Set or Show where all the versions are stored into');
-        _log('   '+NIM+' version                     : Shows the version of this tool'                                  );
+        _log('   '+NIM+' arch                             : Show whichever arch node is using.'                               );
+        _log('   '+NIM+' install    <version>   [arch]    : Version can be any Node version either from NodeJs of IOJS'       );
+        _log('                                               see: http://cloned2k16.github.io/jsNVM/'                         );
+        _log('   '+NIM+' list       [available]           : List the current installation list or the availables to download' );
+        _log('   '+NIM+' remove     <version>   [arch]    : Uninstall specified version'                                      );
+        _log('   '+NIM+' use        <version>   [arch]    : Switch to the specified version and optionally arch'              );
+        _log('   '+NIM+' root       [path]                : Set or Show where all the versions are stored into'               );
+        _log('   '+NIM+' version                          : Shows the version of this tool'                                   );
         _log('');
-        _log('   '+NIM+' gui                         : Start an useful graphical interface (web)                       ');
+        _log('   '+NIM+' gui                              : Start an useful graphical interface (web)                       ' );
         
     }
     ,       downloadFiles   =   (url,dir,list)  =>  {
              try { 
-                //_log('download files from: ',url, ' --> ',dir);
                 request.head(url,(err, res, body) => {
                     if (!err && res.statusCode == 200) {
                      var inProg = []  
@@ -550,7 +547,10 @@ try{
             }
     ,       do_VERSION      =   (cmd)           =>  {
                 _log(info.version);
-            }            
+            }      
+    ,       do_ROOT         =   (cmd,where)     =>  {
+                _log('not implemented yet!');
+            }
     ,       do_GUI          =   (cmd,show)      =>  {
              try{   
                 app=express();
@@ -662,16 +662,17 @@ try{
     
         try {
             cmd = args[0] && args[0].toLowerCase();
-                 if ('arch'     .startsWith(cmd))  do_ARCH      (cmd,args[1]);          // show or set default Arch
+                 if ('arch'     .startsWith(cmd))   do_ARCH     (cmd,args[1]);                          // show or set default Arch
             else if ('list'     .startsWith(cmd)
-                    || 'ls'     .startsWith(cmd))  do_LIST      (cmd,args[1]);          // show installed or availables
-            else if ('use'      .startsWith(cmd))  do_USE       (cmd,args[1],args[2]);  // link current version to selected
-            else if ('install'  .startsWith(cmd))  do_INSTALL   (cmd,args[1],args[2]);  // install a new version that can be used later locally
+                    || 'ls'     .startsWith(cmd))   do_LIST     (cmd,args[1]);                          // show installed or availables
+            else if ('use'      .startsWith(cmd))   do_USE      (cmd,args[1],args[2]);                  // link current version to selected
+            else if ('install'  .startsWith(cmd))   do_INSTALL  (cmd,args[1],args[2]);                  // install a new version that can be used later locally
             else if ('remove'   .startsWith(cmd) 
-                    && cmd.length==6            )  do_REMOVE    (cmd,args[1],args[2]);  // remove should be typed completeley to be shure you don't mistyped it
-            else if ('version'  .startsWith(cmd))  do_VERSION   (cmd);                           
-            else if ('gui'      .startsWith(cmd))  do_GUI       (cmd,args[1]);          // run with web GUI         
-            else if (ND.x) {}                                                           // force error
+                    && cmd.length==6            )   do_REMOVE   (cmd,args[1],args[2]);                  // remove should be typed completeley to be shure you don't mistyped it
+            else if ('version'  .startsWith(cmd))   do_VERSION  (cmd);                           
+            else if ('gui'      .startsWith(cmd))   do_GUI      (cmd,args[1]);                          // run with web GUI         
+            else if ('root'     .startsWith(cmd))   do_ROOT     (cmd,args[1]);
+            else if (ND.x) {}                                                                           // force error
         }
         catch (ex) { 
             if (!ex.message.startsWith("Cannot read property 'x'")) _err(ex);
