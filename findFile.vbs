@@ -25,6 +25,6 @@ For Each sE in sExt
   End If
 Next
 
-WScript.Echo line & " by adding: " & sE
+WScript.Echo line & vbCrLf & " by adding: " & sE
 
   

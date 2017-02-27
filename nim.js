@@ -156,6 +156,10 @@
             _                   = _APP;
    
     //  ===================================================== 
+    const   qtd             =   (s)             =>  {
+      // workaround to fix nodejs mess with spaces inside process spanw arguments
+      return s.replace(' ','#');  
+    };
     
     const   
             do_ARCH         =   (cmd,newA)      =>  {
@@ -303,7 +307,7 @@
                     w4it.done(  () => { return !(_.nodeReqInProgress || _.iojsReqInProgress); },
                                 () => {
                             _.log('BOTH FINISHED!\n' );
-try{        
+                        try{        
                             var total       =   0
                             ,   nodeLen     =   _.nodeList? _.nodeList.length : 0
                             ,   iojsLen     =   _.iojsList? _.iojsList.length : 0
@@ -359,24 +363,10 @@ try{
                                 rel =   mileStones[i];
                                 _log('\t    ',rel.version ,'\t    ',rel.lts ? rel.lts : '\t','\t',rel.origin);
                             } 
-                }
-                catch ( e){
-                    _.log("Exception: ",e);
-                }
-                            /*        
-                            var max=17, i=0;
-                            _out.write(strFormat("\n\t====== List of %i most recent versions =\n",max));
-                            _out.write("\tSTABLE\t\tLTS\n\n");
-                            do {
-                                var line;
-                                if (stable.length>i) line =(strFormat('\t%s',stable[i].version));
-                                else                 line =('\t\t');
-                                if (lts.length>i)    line+=(strFormat('\t\t%s\t( %s )',lts[i].version ,lts[i].lts));
-                                _out.write(line+'\n');
-                                i++;
-                            } 
-                            while (max-- > 0);
-                            */              
+                        }
+                        catch ( e){
+                            _.log("Exception: ",e);
+                        }
                     });
                     
                     return;
@@ -442,12 +432,54 @@ try{
                     return null;
                 }
             }        
+    ,       do_ACTIVATE     =   (cmd)           =>  {
+                _log("nodeFolder: '"+nodeFolder+"' nodeStoreDir: '"+nodeStoreDir+"'");
+                var data = fs.readFileSync('whereIsNode', "utf8")
+                ,   nodeProgDir
+                ,   nodeFile
+                ;    
+                data        = data.split('\n')[0];
+                data        = data.split('\\');
+                nodeFile    = data.pop();
+                nodeProgDir = data.pop();
+                nodeProgPath= data.join('\\');
+                            
+                _log("whereisNode: "+nodeProgPath+" : "+nodeProgDir);
+
+                activateArgs.push(cmd);
+                activateArgs.push(qtd(nodeProgPath));
+                activateArgs.push(qtd(nodeProgDir));
+                activateArgs.push(nodeFolder);
+                activateArgs.push("> activate.log");
+
+                child=childProc.spawn(activateCommand ,activateArgs,{ stdio: 'inherit' } );
+                child.on('error',function (err) { _err(err);    me.exit(-123);  });
+                child.on('exit', function (code){               me.exit(code)   });
+
+                        
+            }
     ,       do_USE          =   (cmd,_ver,_arch)=>  {
                 let ver     = normalizeVer  (_ver)
                 ,   arch    = normalizeArch (_arch)
+                ,   vPath   = nodeStoreDir + ver 
+                ,   found   = false
+                ,   archs   = validArchPaths.win[arch.endsWith('64')?1:0]
                 ;
                 
-                var vPath   = nodeStoreDir + ver + '/' + arch;
+                for (aa in archs){
+                    var pp=vPath + '/' + archs[aa];
+                    if (fs.existsSync(pp)){
+                        vPath = pp;
+                        found=true;
+                        break;
+                    }
+                }
+                
+                if (! found) {
+                    _err("version not found!");
+                    return;
+                }
+                
                 try {
                     files = fs.readdirSync(vPath);
                     for (i in nodeRequired) if (0> files.indexOf(nodeRequired[i])) {
@@ -455,16 +487,16 @@ try{
                         me.exitCode=-3; 
                     }
                     try {
+
                         try { fs.rmdirSync   (nodeFolder); } catch(e) { }
                         var slsh = /\//g
                         ,   bsls = '\\'  
                         ,   child
                         ;
-          
-                        //fs.symlinkSync (nodeFolder,nodeStoreDir);
+
+                        //    
                         symLinkArgs.push(nodeFolder   .replace(slsh,bsls));
                         symLinkArgs.push(vPath        .replace(slsh,bsls));
-
                         child=childProc.spawn(symLinkCommand ,symLinkArgs,{  stdio: 'inherit' } );
                         child.on('error',function (err) { _err(err);    me.exit(-123);  });
                         child.on('exit', function (code){               me.exit(code)   });
@@ -636,7 +668,9 @@ try{
         case    'x64':
                         findNodeCommand = 'findFile.cmd'
                         symLinkCommand  = 'sudo.cmd'
-                        symLinkArgs     = ['mklink','/D']
+                        activateCommand = 'sudo.cmd'
+                        activateArgs    = ['activate']
+                        symLinkArgs     = ['mklink'     ,'/D']
                         nodeRequired    = ['node.exe','node.lib'];
                         iojsRequired    = ['iojs.exe','iojs.lib'];
                         archPrfx        = 'win-';
@@ -649,10 +683,7 @@ try{
      var    child=childProc.spawn(findNodeCommand ,['node','>','whereIsNode'],{  stdio: 'inherit' } );
 
             child.on('error',function (err) { _err(err);    me.exit(-123);  });
-            child.on('exit', function (code){               
-            main();
-           });
-           
+            child.on('exit', function (code){               main();         });
     } 
     catch (ex) {
          exit("can't find Node installation dir",ex);   
@@ -664,14 +695,16 @@ try{
             cmd = args[0] && args[0].toLowerCase();
                  if ('arch'     .startsWith(cmd))   do_ARCH     (cmd,args[1]);                          // show or set default Arch
             else if ('list'     .startsWith(cmd)
-                    || 'ls'     .startsWith(cmd))   do_LIST     (cmd,args[1]);                          // show installed or availables
+                  || 'ls'       .startsWith(cmd))   do_LIST     (cmd,args[1]);                          // show installed or availables
             else if ('use'      .startsWith(cmd))   do_USE      (cmd,args[1],args[2]);                  // link current version to selected
             else if ('install'  .startsWith(cmd))   do_INSTALL  (cmd,args[1],args[2]);                  // install a new version that can be used later locally
             else if ('remove'   .startsWith(cmd) 
-                    && cmd.length==6            )   do_REMOVE   (cmd,args[1],args[2]);                  // remove should be typed completeley to be shure you don't mistyped it
+                  && cmd.length==6              )   do_REMOVE   (cmd,args[1],args[2]);                  // remove should be typed completeley to be shure you don't mistyped it
             else if ('version'  .startsWith(cmd))   do_VERSION  (cmd);                           
             else if ('gui'      .startsWith(cmd))   do_GUI      (cmd,args[1]);                          // run with web GUI         
             else if ('root'     .startsWith(cmd))   do_ROOT     (cmd,args[1]);
+            else if ('on'     == cmd 
+                  || 'off'    == cmd)               do_ACTIVATE (cmd);                                  // activate deactivate globally
             else if (ND.x) {}                                                                           // force error
         }
         catch (ex) { 
