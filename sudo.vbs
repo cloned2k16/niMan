@@ -1,5 +1,7 @@
 Option Explicit 
 
+Randomize 
+
 Dim nArgs 
     nArgs = WScript.Arguments.Count 
 
@@ -11,16 +13,38 @@ If nArgs = 0 Then
     WScript.Quit 1
 End If
     
-    Dim sHell, sHellApp, cmd, args, i
+    Dim sHell, sHellApp, fso, file, cmd, args, i, outFileName
     
+    outFileName     = "sudo-" & RIGHT(String(6, "0") & Int(123456*Rnd(1)+1), 6) & ".out"
     Set sHell       = CreateObject("WScript.Shell")
     Set sHellApp    = CreateObject("Shell.Application")
+    Set fso         = CreateObject("Scripting.FileSystemObject")
 
         cmd   = sHell.ExpandEnvironmentStrings("%COMSPEC%")
    
         args = "/C CD " & sHell.CurrentDirectory & " & "
         For i = 0 To nArgs - 1
-            args = args & " " & WScript.Arguments(i)
+            args = args & " " & Replace(WScript.Arguments(i),"'",chr(34))
         Next
+        args = args & " > " & outFileName     
+   
+    ShellApp.ShellExecute cmd, args, "", "runAs" , 0
     
-    sHellApp.ShellExecute cmd, args, "", "runAs" , 0
+    WScript.Echo outFileName
+    
+    While Not fso.FileExists(outFileName)
+        WScript.Sleep 123
+    Wend 
+    
+    Set file = fso.OpenTextFile(outFileName, 1)
+    
+    WScript.Echo file.ReadAll
+    
+    file.Close()
+    
+    fso.DeleteFile outFileName,True
+    
+    
+    
+    
+    
