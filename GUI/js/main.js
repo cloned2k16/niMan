@@ -161,6 +161,7 @@
         addYearMark(dv,new Date('1-1-2014'),min,step);
         addYearMark(dv,new Date('1-1-2015'),min,step);
         addYearMark(dv,new Date('1-1-2016'),min,step);
+        addYearMark(dv,new Date('1-1-2017'),min,step);
         
         var alt     = _newHtmlEl('div')
         ,   altTxt  = null
