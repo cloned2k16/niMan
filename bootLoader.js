@@ -36,6 +36,7 @@
     ,   sts3
     ,   distFolder
     ,   weNeedDownload
+    ,   fileToDown
     ,   dwnInProg1      =   true
     ,   dwnInProg2      =   true
     ,   dwnInProg3      =   true
@@ -117,40 +118,37 @@
     }
     
     // our App runs with its own copy of Node installed in myNodePath/node
-    try         { sts1 = fs.lstatSync(myNodePath); }
+    try         { fs.lstatSync(myNodePath); }
     catch (err) { 
         try     { fs.mkdirSync(myNodePath); }
         catch (err)    { exit("sorry can't create folder: ",myNodePath,err); }      
     }
-    
-    try {
-        var path=myNodePath+'/';
-        sts1 = fs.lstatSync     (path+myNodeFile);
-        dwnInProg1= false;
-        
-        if (myNodeFile2 !== ND) {  sts2 = fs.lstatSync (path+myNodeFile2); } 
-        dwnInProg2= false;
-        
-        sts3 = fs.lstatSync     (path+myNpnZipFile);
-        dwnInProg3= false;
-        
-    }
-    catch (err)     { 
-        _log('downloading  ...')
-        try {
-            if (sts1==ND)      download(nodeDistURI+myNodeFile          ,myNodePath+myNodeFile  , function (err) { 
+
+    try{    
+        fileToDown=   myNodePath+'/'+myNodeFile;
+        if (!fs.existsSync(fileToDown)){
+            download(nodeDistURI+myNodeFile        , fileToDown , function (err) { 
                 err && me.exit(err.message,err); dwnInProg1=false; });
-            if (sts2==ND 
-                &&  myNodeFile2) download(nodeDistURI+myNodeFile2       ,myNodePath+myNodeFile2 , function (err) { 
+        } 
+        else dwnInProg1=false;         
+        
+        fileToDown=   myNodePath+'/'+myNodeFile2;
+        if (myNodeFile2 && !fs.existsSync(fileToDown)){
+            download(nodeDistURI+myNodeFile2       ,myNodePath+'/'+myNodeFile2 , function (err) { 
                 err && me.exit(err.message,err); dwnInProg2=false; });
-            else  dwnInProg2=false;
+        }
+        else  dwnInProg2=false;
             
-            if (sts3==ND)      download(npmDistBase+myNPM               ,myNodePath+myNpnZipFile, function (err) { 
+        fileToDown=   myNodePath+'/'+myNpnZipFile;
+        if (!fs.existsSync(fileToDown)){
+            download(npmDistBase+myNPM               ,myNodePath+'/'+myNpnZipFile, function (err) { 
                 err && me.exit(err.message,err); dwnInProg3=false; });
         }
-        catch (err)    { exit("sorry can't download Node:",err); }
-     
+        else  dwnInProg3=false;
     }
+    catch (err)    { exit("sorry can't download Node:",err); }
+     
+    
 
     weNeedDownload=dwnInProg1 || dwnInProg2 || dwnInProg3;
     w4it.enableAnimation();
@@ -169,7 +167,7 @@
                 try {
                     if (!fs.existsSync(npmPath) && !fs.existsSync(npmTempPath)){
                         _log ("unzipping:",myNpnZipFile);
-                        var child=exec("xtract",[  myNodePath+myNpnZipFile,   npmExtractPath   ],{  stdio: 'inherit' } );
+                        var child=exec("xtract",[  myNodePath+'/'+myNpnZipFile,   npmExtractPath   ],{  stdio: 'inherit' } );
                     }
                 }
                 catch (err){ exit("sorry can't install NPM:",err); }
