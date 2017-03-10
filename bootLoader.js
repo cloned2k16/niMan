@@ -10,7 +10,8 @@
     ,   http            =   require ('https')
     ,   zlib            =   require ('zlib')
     ,   childProc       =   require ('child_process')
-    ,   w4it            =   require ('w4it')
+    ,   exec            =   childProc.execFileSync 
+    ,   w4it            =   require ('./js-libs/w4it')
     ,   isOS            =   me.arch
     ,   args            =   me.argv
     ,   launchPrfx      
@@ -22,27 +23,41 @@
     ,   myNodeFileExt                                                                                   // windows only ?
     ,   myNodeVer       =   'v6.2.1'
     ,   myNPM           =   'v3.9.3'
+    ,   npmExtractPath
+    ,   npmPath
     ,   myNpnZipFile   
-    ,   npmCmdFile
+    ,   npmCommandFile
+    ,   npmTempPath
     ,   nodeDistBase    =   'https://nodejs.org/dist/'
     ,   npmDistBase     =   'https://codeload.github.com/npm/npm/zip/'
     ,   nodeDistURI 
     ,   sts1
     ,   sts2
     ,   sts3
-    ,   sts4
     ,   dwnInProg1      =   true
     ,   dwnInProg2      =   true
     ,   dwnInProg3      =   true
-    ,   _log            =   function    ()              {   Function.apply.call(console.log     ,console,arguments); }
-    ,   _err            =   function    ()              {   Function.apply.call(console.error   ,console,arguments); }
-    ,   exit            =   function    (msg,err)       {
+    ,   _log            =   function    ()                  {   Function.apply.call(console.log     ,console,arguments); }
+    ,   _err            =   function    ()                  {   Function.apply.call(console.error   ,console,arguments); }
+    ,   exit            =   function    (msg,err)           {
         var extc    = msg ? -234 : 0;
         extc && _err(msg,err);
         me.exitCode = extc;
         me.exit();
     }
-    ,   download        =   function    (url, dest, cb) {   _log('downloading: ',url);
+    ,   copyFileSync    =   function    (srcFile,trgFile)   {
+        exec("cmd",["/C","copy",toLocalOs(srcFile),toLocalOs(trgFile)],{  stdio: 'inherit' } );
+    }
+    ,   toLocalOs       =   function    (s)                 {
+        switch (isOS){
+            case    'x86':
+            case    'x64':
+                return s.replace(/\//gi,'\\');
+            default:
+                return s;
+        }
+    }
+    ,   download        =   function    (url, dest, cb)     {   _log('downloading: ',url);
         var file    = fs.createWriteStream(dest)
         ,   request = http.get(url, function(response) {
             var sts=response.statusCode;
@@ -78,10 +93,13 @@
                         myNpnZipFile    =   myNPM+'.zip';
                         launchPrfx      =   '';
                         launchSffx      =   '';
-                        npmCmdFile      =   'npm.cmd';
+                        npmExtractPath  =   myNodePath+"node_modules"
+                        npmPath         =   npmExtractPath+'/npm'
+                        npmTempPath     =   npmPath+'-'+myNPM.substring(1)
+                        npmCommandFile  =   myNodePath+'/npm.cmd';
                         break;
         default:                                                                                        //  ERROR!!!
-            exit("unknown 'architecture' ... ");
+            exit("unknown 'architecture' ... ",isOS);
     }
     _log('here we go..');
     
@@ -93,46 +111,31 @@
     }
     
     try {
-            sts1 = fs.lstatSync (myNodePath+myNodeFile);
+        sts1 = fs.lstatSync     (myNodePath+myNodeFile);
         dwnInProg1= false;
-        if (myNodeFile2 !== ND) {
-            sts2 = fs.lstatSync (myNodePath+myNodeFile2);
-            dwnInProg2=false;
-        } 
+        
+        if (myNodeFile2 !== ND) {  sts2 = fs.lstatSync (myNodePath+myNodeFile2); } 
+        dwnInProg2= false;
+        
         sts3 = fs.lstatSync     (myNodePath+myNpnZipFile);
         dwnInProg3= false;
         
-        sts4 = fs.lstatSync     (myNodePath+npmCmdFile);   
-
     }
     catch (err)     { 
-     _log('installation incomplete ...')
-     try {
-         if (sts1==ND)      download(nodeDistURI+myNodeFile     ,myNodePath+myNodeFile  , function (err) { 
-            err && me.exit(err.message,err); dwnInProg1=false; });
-         if (sts2==ND 
-           &&  myNodeFile2) download(nodeDistURI+myNodeFile2    ,myNodePath+myNodeFile2 , function (err) { 
-            err && me.exit(err.message,err); dwnInProg2=false; });
-         else               dwnInProg2=false;
-         if (sts3==ND)      download(npmDistBase+myNpn          ,myNodePath+myNpnZipFile, function (err) { 
-            err && me.exit(err.message,err); dwnInProg3=false; });
-     }
-     catch (err)    { exit("sorry can't download Node:",err); }
-     try {
-         if (sts4==ND){
-            _log ("unzipping ",myNpnZipFile);
-            var child=childProc.spawn("xtract",[    myNodePath+myNpnZipFile
-                                                ,   myNodePath+"node_modules"
-                                                ],{  stdio: 'inherit' } );
-            child.on('error',   function    (err) { _err(err);    me.exit(-123);  });
-            child.on('exit' ,   function    (code){ 
-                _log("NPM.. installation almost completed!"); 
-            });                                                
-         }
-     }
-     catch (err){
-         exit("sorry can't install NPM:",err);
-     }
+        _log('downloading  ...')
+        try {
+            if (sts1==ND)      download(nodeDistURI+myNodeFile          ,myNodePath+myNodeFile  , function (err) { 
+                err && me.exit(err.message,err); dwnInProg1=false; });
+            if (sts2==ND 
+                &&  myNodeFile2) download(nodeDistURI+myNodeFile2       ,myNodePath+myNodeFile2 , function (err) { 
+                err && me.exit(err.message,err); dwnInProg2=false; });
+            else  dwnInProg2=false;
+            
+            if (sts3==ND)      download(npmDistBase+myNPM               ,myNodePath+myNpnZipFile, function (err) { 
+                err && me.exit(err.message,err); dwnInProg3=false; });
+        }
+        catch (err)    { exit("sorry can't download Node:",err); }
+     
     }
 
     
@@ -148,9 +151,38 @@
                 argss.splice(0,1);                                                                      // remove node
                 argss[0] = bootFile;                                                                    // replace myself
                 
-                //var child=childProc.spawn(cmdLine,argss,{  stdio: 'inherit' } );
-                //child.on('error',function (err) { _err(err);    me.exit(-123);  });
-                //child.on('exit', function (code){               me.exit(code)   });
+                _log("download finished ..");
+                try {
+                    if (!fs.existsSync(npmPath) && !fs.existsSync(npmTempPath)){
+                        _log ("unzipping:",myNpnZipFile);
+                        var child=exec("xtract",[  myNodePath+myNpnZipFile,   npmExtractPath   ],{  stdio: 'inherit' } );
+                    }
+                }
+                catch (err){ exit("sorry can't install NPM:",err); }
+        
+                try{
+                    if (fs.existsSync(npmTempPath) && !fs.existsSync(npmPath)){
+                        _log("renaming:",npmTempPath,npmPath)
+                        fs.renameSync(npmTempPath,npmPath);
+                    }
+                }
+                catch (err){ exit("sorry can't install NPM:",err.message); }
+        
+                try{
+                    if (!fs.existsSync(npmCommandFile)){
+                        _log("coping:",npmCommandFile)
+                        copyFileSync(npmPath+'/bin/npm'       ,myNodePath+'/npm');
+                        copyFileSync(npmPath+'/bin/npm.cmd'   ,myNodePath+'/npm.cmd');
+                    }
+                }
+                catch (err){ exit("sorry can't install NPM:",err.message); }
                 
-            });
+                _log("installing packages...");
+                
+                exec(toLocalOs(npmCommandFile),["install"],{  stdio: 'inherit' } );
+                
+                var child=childProc.spawn(cmdLine,argss,{  stdio: 'inherit' } );
+                child.on('error',function (err) { _err(err);    me.exit(-123);  });
+                child.on('exit', function (code){               me.exit(code)   });
+        });
     
