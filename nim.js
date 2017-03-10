@@ -7,7 +7,7 @@
 
     const
             info            =   {
-                                version :   '0.0.2'
+                                version :   '0.0.3'
                             ,   desc    :   'Node Installation Manager aka NVM++'
                             }
     ,       path            =   require ('path')

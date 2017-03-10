@@ -1,6 +1,6 @@
 'use strict';
 
-// Hi, I'm the NmNgR Boot Loader ...
+// Hi, I'm the niMan Boot Loader ...
 //
 //  ------------------------------------------------------------------------------------------------
     var ND                                                                                              // undefined!
@@ -19,7 +19,7 @@
     ,   bootFile        =   'nim'
     ,   myNodeFile      =   'node'
     ,   myNodeFile2                                                                                     // windows only
-    ,   myNodePath      =   'my/'
+    ,   myNodePath      =   'my'
     ,   myNodeFileExt                                                                                   // windows only ?
     ,   myNodeVer       =   'v6.2.1'
     ,   myNPM           =   'v3.9.3'
@@ -34,6 +34,8 @@
     ,   sts1
     ,   sts2
     ,   sts3
+    ,   distFolder
+    ,   weNeedDownload
     ,   dwnInProg1      =   true
     ,   dwnInProg2      =   true
     ,   dwnInProg3      =   true
@@ -44,6 +46,15 @@
         extc && _err(msg,err);
         me.exitCode = extc;
         me.exit();
+    }
+    ,   linkDirSync     =   function    (srcDir,trgDir)     {
+        if (!fs.existsSync(trgDir)){
+            exec('cmd',['/C','mkDir',toLocalOs(trgDir)],{  stdio: 'inherit' } );
+        }
+        exec("sudo.cmd",["mklink","/D",toLocalOs(trgDir+'/'+myARCH),toLocalOs(process.cwd()+'/'+srcDir)],{  stdio: 'inherit' } );
+    }
+    ,   copyDirSync     =   function    (srcDir,trgDir)     {
+        exec("cmd",["/C","xcopy","/E","/J","/I",toLocalOs(srcDir),toLocalOs(trgDir)],{  stdio: 'inherit' } );
     }
     ,   copyFileSync    =   function    (srcFile,trgFile)   {
         exec("cmd",["/C","copy",toLocalOs(srcFile),toLocalOs(trgFile)],{  stdio: 'inherit' } );
@@ -58,6 +69,7 @@
         }
     }
     ,   download        =   function    (url, dest, cb)     {   _log('downloading: ',url);
+    
         var file    = fs.createWriteStream(dest)
         ,   request = http.get(url, function(response) {
             var sts=response.statusCode;
@@ -82,26 +94,27 @@
             if (cb) return cb(err);
         }); 
     }
+    ,   myARCH          =   'win-'+isOS;
     ;
     
     switch (isOS) {
         case    'x86':
         case    'x64':
-                        nodeDistURI     =   nodeDistBase+myNodeVer+'/win-'+isOS+'/';
+                        nodeDistURI     =   nodeDistBase+myNodeVer+'/'+myARCH+'/';
                         myNodeFile2     =   myNodeFile+'.lib';
                         myNodeFile     +=   '.exe';
                         myNpnZipFile    =   myNPM+'.zip';
                         launchPrfx      =   '';
                         launchSffx      =   '';
-                        npmExtractPath  =   myNodePath+"node_modules"
+                        npmExtractPath  =   myNodePath+"/node_modules"
                         npmPath         =   npmExtractPath+'/npm'
                         npmTempPath     =   npmPath+'-'+myNPM.substring(1)
                         npmCommandFile  =   myNodePath+'/npm.cmd';
+                        distFolder      =   'dist/'
                         break;
         default:                                                                                        //  ERROR!!!
             exit("unknown 'architecture' ... ",isOS);
     }
-    _log('here we go..');
     
     // our App runs with its own copy of Node installed in myNodePath/node
     try         { sts1 = fs.lstatSync(myNodePath); }
@@ -111,13 +124,14 @@
     }
     
     try {
-        sts1 = fs.lstatSync     (myNodePath+myNodeFile);
+        var path=myNodePath+'/';
+        sts1 = fs.lstatSync     (path+myNodeFile);
         dwnInProg1= false;
         
-        if (myNodeFile2 !== ND) {  sts2 = fs.lstatSync (myNodePath+myNodeFile2); } 
+        if (myNodeFile2 !== ND) {  sts2 = fs.lstatSync (path+myNodeFile2); } 
         dwnInProg2= false;
         
-        sts3 = fs.lstatSync     (myNodePath+myNpnZipFile);
+        sts3 = fs.lstatSync     (path+myNpnZipFile);
         dwnInProg3= false;
         
     }
@@ -138,20 +152,20 @@
      
     }
 
-    
+    weNeedDownload=dwnInProg1 || dwnInProg2 || dwnInProg3;
     w4it.enableAnimation();
     w4it.done(function () { return !dwnInProg1 
                                 && !dwnInProg2
                                 && !dwnInProg3
                                 ; }
             , function (){
-                var cmdLine =launchPrfx+myNodePath+myNodeFile+launchSffx
+                var cmdLine =launchPrfx+myNodePath+'/'+myNodeFile+launchSffx
                 ,   argss   = args
                 ;
                 argss.splice(0,1);                                                                      // remove node
                 argss[0] = bootFile;                                                                    // replace myself
                 
-                _log("download finished ..");
+                if (weNeedDownload) _log("download finished ..");
                 try {
                     if (!fs.existsSync(npmPath) && !fs.existsSync(npmTempPath)){
                         _log ("unzipping:",myNpnZipFile);
@@ -177,9 +191,17 @@
                 }
                 catch (err){ exit("sorry can't install NPM:",err.message); }
                 
-                _log("installing packages...");
+                if (!fs.existsSync(distFolder+myNodeVer)){
+                    _log('put my own node version in list ..')
+                    linkDirSync(myNodePath,distFolder+myNodeVer);
+                }
+                    
+                if (!fs.existsSync('node_modules')){         
+                    _log("installing packages...");
                 
-                exec(toLocalOs(npmCommandFile),["install"],{  stdio: 'inherit' } );
+                    exec(toLocalOs(npmCommandFile),["install"],{  stdio: 'inherit' } );
+                }
+                
                 
                 var child=childProc.spawn(cmdLine,argss,{  stdio: 'inherit' } );
                 child.on('error',function (err) { _err(err);    me.exit(-123);  });
