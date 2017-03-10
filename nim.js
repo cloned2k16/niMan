@@ -156,13 +156,10 @@
             _                   = _APP;
    
     //  ===================================================== 
-    const   qtd             =   (s)             =>  {
-      // workaround to fix nodejs mess with spaces inside process spanw arguments
-      return s.replace(' ','#');  
-    };
+    const   qtd             =   (s)             =>  { return "'"+s+"'"; }
+    ,       toLocal         =   (s)             =>  { return s.replace(new RegExp('/', 'g'),'\\'); }
     
-    const   
-            do_ARCH         =   (cmd,newA)      =>  {
+    ,       do_ARCH         =   (cmd,newA)      =>  {
                 try {               
                     // probably we better write it to a file instead
                     let nf  = fs.readlinkSync   (nodeFolder)
@@ -449,7 +446,7 @@
                 activateArgs.push(cmd);
                 activateArgs.push(qtd(nodeProgPath));
                 activateArgs.push(qtd(nodeProgDir));
-                activateArgs.push(nodeFolder);
+                activateArgs.push(nodeFolder.subStr(0,nodeFolder.length-1));
                 activateArgs.push("> activate.log");
 
                 child=childProc.spawn(activateCommand ,activateArgs,{ stdio: 'inherit' } );

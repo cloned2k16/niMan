@@ -30,13 +30,24 @@ End If
    
     ShellApp.ShellExecute cmd, args, "", "runAs" , 0
     
-    WScript.Echo outFileName
-    
+    ' ShellExecute runs Async so we should wait for it to be done ..
     While Not fso.FileExists(outFileName)
         WScript.Sleep 123
     Wend 
     
-    Set file = fso.OpenTextFile(outFileName, 1)
+    ' and that it has already closed the output file
+    On Error Resume Next
+    Do
+        Err.Clear
+        Set file = fso.OpenTextFile(outFileName, 8,False)   ' try to open file in append mode
+        if err.number = 0 then Exit Do
+
+        WScript.Sleep 123
+    Loop
+    On Error Goto 0
+    file.Close()                                            ' close it again  
+    
+    Set file = fso.OpenTextFile(outFileName, 1)             ' open in read mode
     
     WScript.Echo file.ReadAll
     
