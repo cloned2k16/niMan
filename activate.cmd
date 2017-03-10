@@ -48,7 +48,7 @@ goto MK_NEW_LINK
 :BCKP_EXIST
 echo backup exist
 echo removing link .. %fullPath%
-rem rmDir %fullPath%
+rmDir %fullPath%
 
 :MK_NEW_LINK
 echo new link to %fullPath% %target%
