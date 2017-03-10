@@ -13,8 +13,6 @@
     ,   w4it            =   require ('w4it')
     ,   isOS            =   me.arch
     ,   args            =   me.argv
-    ,   sevenZ          =   '7z1604.exe'
-    ,   url7Z           =   'http://www.7-zip.org/a/'+sevenZ
     ,   launchPrfx      
     ,   launchSffx      
     ,   bootFile        =   'nim'
@@ -123,11 +121,13 @@
      try {
          if (sts4==ND){
             _log ("unzipping ",myNpnZipFile);
-            zlib.gunzip(gzipBuffer, function(err, result) {
-                if(err) return _err(err);
-
-                _log(result);
-            });
+            var child=childProc.spawn("xtract",[    myNodePath+myNpnZipFile
+                                                ,   myNodePath+"node_modules"
+                                                ],{  stdio: 'inherit' } );
+            child.on('error',   function    (err) { _err(err);    me.exit(-123);  });
+            child.on('exit' ,   function    (code){ 
+                _log("NPM.. installation almost completed!"); 
+            });                                                
          }
      }
      catch (err){
