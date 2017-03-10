@@ -1,5 +1,5 @@
 # niMan  
-### (Node Installation Manager)
+### aka NIM (Node Installation Manager)
 
 WARNING:
 
