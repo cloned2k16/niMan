@@ -8,7 +8,7 @@
     ,   os              =   require ('os')
     ,   fs              =   require ('fs')  
     ,   http            =   require ('http')
-    ,   w4it            =   require ('w4it')
+    ,   w4it            =   require ('./js-libs/w4it')
     ,   childProc       =   require ('child_process')
     ,   isOS            =   me.arch
     ,   args            =   me.argv
