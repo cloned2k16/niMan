@@ -1,4 +1,5 @@
-# miN-Nim
+# niMan  
+### (Node Installation Manager)
 
 WARNING:
 
