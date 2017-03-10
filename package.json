@@ -1,7 +1,7 @@
 {
-        "name"              :   "miN-Nim"
-    ,   "description"       :   "A Flexible Version Manager for Node JS (aka jsNVM > NVM++)"
-    ,   "version"           :   "0.0.2"
+        "name"              :   "niMan"
+    ,   "description"       :   "A Flexible Installation Manager for Node JS ( NVM plus )"
+    ,   "version"           :   "0.0.3"
     ,   "license"           :   "MIT"
     ,   "main"              :   "boot.js"
     ,   "dependencies"      :   {
@@ -17,15 +17,16 @@
                             }
     ,   "repository"        :   {
                                     "type"      :   "git"
-                                ,   "url"       :   "https://github.com/cloned2k16/miN-Nim"
+                                ,   "url"       :   "https://github.com/cloned2k16/niMan"
                             }
-    ,   "keywords"          :   [
-                                    "NVM"
+    ,   "keywords"          :   [   "niMan"
+                                ,   "NIM"
+                                ,   "NVM"
                                 ,   "NPM"
                                 ,   "NodeJs"
-                                ,   "Node"
-                                ,   "Installer"
                                 ,   "Version"
+                                ,   "Node"
+                                ,   "Installation"
                                 ,   "Manager"
                                 ]
     ,   "author"            :   "Paolo Lioy"
