@@ -1,14 +1,14 @@
 {
         "name"              :   "niman"
     ,   "description"       :   "A Flexible Installation Manager for Node JS ( NVM plus )"
-    ,   "version"           :   "0.0.6"
+    ,   "version"           :   "0.0.7"
     ,   "license"           :   "MIT"
     ,   "main"              :   "bootLoader.js"
     ,   "preferGlobal"      :   "true"
     ,   "bin"               :   {
                                     "nim" : "bootLoader.js"
                             }    
-    ,   "bundleDependencies":   {
+    ,   "dependencies":   {
                                     "left_pad"  :   ""
                                 ,   "w4it"      :   ""
                                 ,   "request"   :   ""
