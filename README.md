@@ -3,22 +3,29 @@
 
 WARNING:
 
-  this is a PRE ALPHA release so don't expect it to work properly ..
+  ALPHA release so don't expect it to work bugless ..
   
-  and still just intented to be used on Windows ... 
+  and is it still just intented to be used on Windows ... 
+  (as replacement for NVM)
     
 :D
 
 # Installation - Usage
 
-type  
-*  build  
-  which would install required packages either for nodejs and for the GUI  
+after cloning it wherever you'd like to ..
+
+just type:  
+```
+nim
+```  
+at the command prompt ...
+  this will either install required node and packages  
+  or just start the app showing the Usage information ...
+  (actually you can use whichever command argument you'd like to ..)
   
-*  nim list available  
-  which would download the owned private version of nodeJs (if not already)  
-  then list most up to date version for each branch  7.x.x .. 6.x.x ... etc..  
-  
+NIM uses a two stage loader so it first checks for his own version of Node (6.2.1, at the moment )
+if not present it downloads along with corresponding NPM ... then installs additional packages  
+and finally starts the app ...
   
 ![](demo.gif)
 
