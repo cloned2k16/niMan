@@ -1,7 +1,7 @@
 {
         "name"              :   "niman"
     ,   "description"       :   "A Flexible Installation Manager for Node JS ( NVM plus )"
-    ,   "version"           :   "0.0.4"
+    ,   "version"           :   "0.0.5"
     ,   "license"           :   "MIT"
     ,   "main"              :   "bootLoader.js"
     ,   "preferGlobal"      :   "true"
@@ -21,7 +21,7 @@
                             }
     ,   "repository"        :   {
                                     "type"      :   "git"
-                                ,   "url"       :   "https://github.com/cloned2k16/niMan"
+                                ,   "url"       :   "git@github.com:cloned2k16/niMan.git"
                             }
     ,   "keywords"          :   [   "niMan"
                                 ,   "NIM"
