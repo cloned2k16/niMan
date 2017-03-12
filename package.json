@@ -1,5 +1,5 @@
 {
-        "name"              :   "niMan"
+        "name"              :   "niman"
     ,   "description"       :   "A Flexible Installation Manager for Node JS ( NVM plus )"
     ,   "version"           :   "0.0.3"
     ,   "license"           :   "MIT"
