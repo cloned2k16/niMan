@@ -36,9 +36,7 @@ node_modules
 /iojs_dist.lst
 /node_dist.json
 /node_dist.lst
-/dist
 /inuse
-/js-libs
 
 /GUI/dynatrace ip.yaoo
 /originalNodeLink
