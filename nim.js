@@ -5,8 +5,24 @@
     // of Node specified in the first sage and eventually download it if not installed already
     //
 
-    const
-            info            =   {
+    let     ND
+    ,       me              =   process
+    ,       isOS            =   me.arch
+    ,       args            =   me.argv
+    ,       cmdLn           =   args[0]
+    ,       myName          =   args[1]
+    ,       myArch          =   'x64'
+    ,       nodeRequired    =   []
+    ,       iojsRequired    =   []
+    ,       symLinkCcommand 
+    ,       findNodeCommand 
+    ,       archPrfx
+    ,       app             // express app
+    ,       server          // express server
+    ,       io
+    ;
+    
+    const   info            =   {
                                 version :   '0.0.3'
                             ,   desc    :   'Node Installation Manager aka NVM++'
                             }
@@ -18,6 +34,7 @@
     ,       http            =   require ('https')
     ,       request         =   require ('request')
     ,       childProc       =   require ('child_process')
+    ,       exec            =   childProc.execFileSync 
     ,       express         =   require ('express')
     ,       morgan          =   require ('morgan')
     ,       socketIO        =   require ('socket.io')
@@ -42,6 +59,22 @@
     ,       iojsCacheList   =   'iojs_dist.lst'
     ,       nodeDistBase    =   'https://nodejs.org/dist/'
     ,       iojsDistBase    =   'https://iojs.org/dist/'
+    ,       npmDistBase     =   'https://codeload.github.com/npm/npm/zip/'
+    ,       toLocalOs       =   (s)                 =>  {
+                switch (isOS){
+                    case    'x86':
+                    case    'x64':
+                        return s.replace(/\//gi,'\\');
+                    default:
+                        return s;
+                }
+            }
+    ,       copyDirSync     =   (srcDir,trgDir)     =>  {
+                exec("cmd",["/C","xcopy","/E","/J","/I",toLocalOs(srcDir),toLocalOs(trgDir)],{  stdio: 'inherit' } );
+    }
+    ,       copyFileSync    =   (srcFile,trgFile)   =>  {
+                exec("cmd",["/C","copy",toLocalOs(srcFile),toLocalOs(trgFile)],{  stdio: 'inherit' } );
+    }
     ,       _log            =   (...args)       =>  { Function.apply.call(console.log   ,console,args); }
     ,       _err            =   (...args)       =>  { Function.apply.call(console.error ,console,args); }
     ,       normalizeVer    =   (ver)           =>  { return (ver ? ver[0]=='v' ? ver : ver[0]=='V'? 'v'+ver.substring(1) : 'v'+ver : 'v_');  }
@@ -62,11 +95,14 @@
         _log('   '+NIM+' gui                              : Start an useful graphical interface (web)                       ' );
         
     }
-    ,       downloadFiles   =   (url,dir,list)  =>  {
+    ,       downloadFiles   =   (url,dir,list
+                                ,npmUrl,npmVer) =>  {
              try { 
                 request.head(url,(err, res, body) => {
                     if (!err && res.statusCode == 200) {
-                     var inProg = []  
+                     var inProg     =   []  
+                     ,   inProgIdx  =   0
+                     ;
                      
                      try { 
                         var pos =dir.lastIndexOf('/')
@@ -78,17 +114,23 @@
                      catch (e){ if (e.code!='EEXIST'){ _err(e);  return -1; } }
                      
                      for (i in list) {
-                       inProg[i]=true;  
-                       var fName= list[i]
-                       _log('downloading.. ',url+'/'+fName,' into: ',dir+'/'+fName);
-                       
-                       var  fPath   = dir+'/'+fName
-                       ,    file    = fs.createWriteStream(fPath)
+                        var fName= list[i]
+                        ,   fPath   = dir+'/'+fName
+                        ;
+                       _log('downloading.. ',url+'/'+fName,' into: ',fPath);
+                       if (fs.existsSync(fPath)){
+                         inProg[inProgIdx]=false;  
+                         continue;  
+                       } 
+                       inProg[inProgIdx]=true;  
+                           
+                       var  
+                            file    = fs.createWriteStream(fPath)
                        ,    endErr  = ((ii,p) => { return (err) => { _log('endErr',err,ii); fs.unlink(p); inProg[ii]=false; }})(i,fPath)
                        ,    req     = http.get(url+'/'+fName, ((f,p,ii) => { return (res) =>{
                             if (res.statusCode !== 200) {
                                 fs.unlink(p); 
-                                return _err('Response status was ' + res.statusCode);
+                                return _err(url+' status was ' + res.statusCode);
                             }
                             res.pipe(f);
                             f.on('finish', ((ii,ff) => { return () => { 
@@ -100,18 +142,63 @@
                                  fs.linkSync(dir+'/'+fn, dir+'/'+fn.replace('iojs','node'))
                              }
                              inProg[ii]=false;  }})(ii,f) );
-                       }})(file,fPath,i));
+                       }})(file,fPath,inProgIdx++));
                         req.on ('error', (err) => { endErr(err); });
                         file.on('error', (err) => { endErr(err); });
                      }
                      
+                    var fName   = npmVer+'.zip'
+                    ,   fPath   = dir+'/'+fName
+                    ;
+                     if (!fs.existsSync(fPath)){
+                        inProg[inProgIdx]=true;
+                        _log('downloading.. ',npmUrl+'v'+npmVer,' into: ',fPath);
+                        var  file    = fs.createWriteStream(fPath)
+                        ,    endErr  = ((ii,p) => { return (err) => { _log('endErr',err,ii); fs.unlink(p); inProg[ii]=false; }})(i,fPath)
+                        ,    req     = http.get(npmUrl+'v'+npmVer, ((f,p,ii) => { return (res) =>{
+                            if (res.statusCode !== 200) {
+                                fs.unlink(p); 
+                                return _err('NPM status was ' + res.statusCode);
+                            }
+                            res.pipe(f);
+                            f.on('finish', ((ii,ff) => { return () => { 
+                                let fn=fName;
+                                _log(fn,' done.'); 
+                                ff.close();                          
+                                inProg[ii]=false;  
+                            }})(ii,f) );
+                        }})(file,fPath,inProgIdx++));
+                        req.on ('error', (err) => { endErr(err); });
+                        file.on('error', (err) => { endErr(err); });
+                    }
+                     //_log('we have',inProgIdx,'downloads',inProg);
+                     
                      w4it.enableAnimation();
                      w4it.done ( () => { 
-                      for (i in list) { if (inProg[i]) return false; }
+                      for (i=0; i<inProgIdx; i++) { if (inProg[i]) return false; }
                       return true;
                      }   
                      , () =>{
-                         _log('DONE');
+                        npmDir=dir+'/node_modules'; 
+                        var npmTempPath =   npmDir+'/npm-'+npmVer
+                        ,   npmPath     =   npmDir+'/npm'
+                        ;
+
+                        _log('DONE');
+                        _log('unzipping NPM in ',npmTempPath)
+                        try {
+                            exec("cmd"    ,[ "/C","RMDIR","/S","/Q", toLocalOs(npmPath)     ]  ,{  stdio: 'inherit' } )
+                            exec("cmd"    ,[ "/C","RMDIR","/S","/Q", toLocalOs(npmTempPath) ]  ,{  stdio: 'inherit' } )
+                        }
+                        catch(ee){ 
+                            //_err("error:",ee.message); 
+                        }
+                        exec("xtract",[  fPath,   npmDir   ]       ,{  stdio: 'inherit' } )
+                         
+                        fs.renameSync   (npmTempPath,npmPath);
+                        copyFileSync    (npmPath+'/bin/npm'       ,dir+'/npm');
+                        copyFileSync    (npmPath+'/bin/npm.cmd'   ,dir+'/npm.cmd');
+
                          return 0;
                      });
                     }
@@ -153,8 +240,9 @@
             _APP.err            = _err
             _APP.timeSt         = (name)  => { return timers[name]= (new Date()).getTime();};
             _APP.timeEn         = (name)  => { return (new Date()).valueOf() - timers[name];};
+            _APP.full_list      = ND
             _                   = _APP;
-   
+
     //  ===================================================== 
     const   qtd             =   (s)             =>  { return "'"+s+"'"; }
     ,       toLocal         =   (s)             =>  { return s.replace(new RegExp('/', 'g'),'\\'); }
@@ -196,7 +284,7 @@
                 
                 if (av) { _.log('listing avaiables');
                     
-                    _.ND                = undefined;    
+                    _.ND                =   ND;    
                     _.nodeList          = _.ND;
                     _.nodeError         = _.ND;
                     _.nodeReqInProgress = true;
@@ -338,8 +426,10 @@
                             if (total != len) _.log('merged size missmatch! expected:',total,' actual:',len);
                 
                             _.log('num of releases found:\nNode: ',nodeLen,' IoJs: ',iojsLen);
-                
-                            //fs.writeFile('complete_'+total+'.json', JSON.stringify(merged), function(err) { if(err) { return _log(err);  } });
+                            
+                            _APP.full_list=merged;
+                            
+                            fs.writeFile('full_list.json', JSON.stringify(merged), function(err) { if(err) { return _log(err);  } });
                             var rel
                             ,   curr
                             ,   last
@@ -511,48 +601,66 @@
                 ,   vPath   = ver+'/'
                 ,   notFnd1 = false
                 ,   notFnd2 = false
+                ,   vList   = _APP.full_list
+                ,   vInf
+                ,   found   = false
+                ,   NPMv
+                ,   urlBase
+                ,   requires
                 ;
         
-        
-                request.head(nodeDistBase+vPath,function (err, response, body) {
-                   
-                    if (!err && response.statusCode == 200) {
+                _log('installing version: ',_ver);
+                if ( vList != ND ){
+                    //_log(vList);
+                    for (v in vList){
+                        vInf=vList[v];
+                        if (vInf.version==('v'+_ver)){
+                            _log("FOUND! (released on:",vInf.date,")");
+                            NPMv=vInf.npm;
+                            _log("we need NPM ver:",NPMv);
+                            found=true;
+                            
+                            switch (vInf.origin){
+                                case 'NODE':
+                                    urlBase =nodeDistBase;
+                                    requires=nodeRequired;
+                                    break;
+                                case 'IOJS':    
+                                    urlBase=iojsDistBase;
+                                    requires=iojsRequired;
+                                    break;
+                            }
+                            break;
+                        }
+                    }
+                    if (!found){
+                       _log("SORRY NOT FOUND");
+                       return;
+                    }
+                }
+                else{
+                    _err("we can't find any version info, please run [nim list available] first!");
+                    return;
+                } 
+                    
+                request.head(urlBase+vPath,function (err, response, body) {
+                    _log(urlBase+vPath, err,response.statusCode,"'"+body+"'");
+                   if (!err && response.statusCode == 200) {
                         let a
                         ,   vDir
                         ,   archs = validArchPaths.win[arch.endsWith('64')?1:0]
                         for (a in archs) {
-                         vDir=vPath+archs[a];    
-                         downloadFiles(nodeDistBase+vDir,nodeStoreDir+vDir,nodeRequired);
+                         vDir=vPath+archs[a];   
+                         downloadFiles(urlBase+vDir,nodeStoreDir+vDir,requires
+                                      ,npmDistBase,NPMv  );
                         }
-                    }
+                   }
                     else {
                         notFnd1 = true;
-                        saySorry();
+                        _err("can't find actual version for",vDir,archs);
                     }
                     
                 });
-        
-                request.head(iojsDistBase+vPath,function (err, response, body) {
-                    if (!err && response.statusCode == 200) {
-                     let a
-                        ,   vDir
-                        ,   archs = validArchPaths.win[arch.endsWith('64')?1:0]
-                        for (a in archs) {
-                         vDir=vPath+archs[a];    
-                         downloadFiles(iojsDistBase+vDir,nodeStoreDir+vDir,iojsRequired);
-                        }
-                         
-                    }
-                    else {
-                        notFnd2 = true;
-                        saySorry();
-                    } 
-                });
-                
-                
-                saySorry = function () {
-                  if (notFnd1 && notFnd2) _log("sorry! .. can't find version:", _ver );
-                } 
         
             }
     ,       do_REMOVE       =   (cmd,_ver,_arch)=>  {
@@ -634,23 +742,16 @@
              }       
             }
     ;            
-            
-    let     ND
-    ,       me              =   process
-    ,       isOS            =   me.arch
-    ,       args            =   me.argv
-    ,       cmdLn           =   args[0]
-    ,       myName          =   args[1]
-    ,       myArch          =   'x64'
-    ,       nodeRequired    =   []
-    ,       iojsRequired    =   []
-    ,       symLinkCcommand 
-    ,       findNodeCommand 
-    ,       archPrfx
-    ,       app             // express app
-    ,       server          // express server
-    ,       io
-    ;
+
+    fs.readFile('./full_list.json', function read(err, data) {
+        if (err){
+          _err("unexpected error",err)
+          return;  
+        } 
+        _APP.full_list = JSON.parse(data.toString());
+    });
+
+    
     args.splice(0,2);
 
     me.on('exit', function (c) { process.exit(c); })
