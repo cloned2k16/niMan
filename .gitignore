@@ -42,3 +42,7 @@ node_modules
 /originalNodeLink
 /dist/v6.2.1
 /dist/v6.6.0/win-x64
+/dist/v0.12.18/x64
+/dist/v3.3.1/win-x64
+/dist/v4.8.0/win-x64
+/dist/v5.12.0/win-x64

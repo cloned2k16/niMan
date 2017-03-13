@@ -1,31 +1,37 @@
+    "use strict";
+    
     // this file is supposed to run under at least version 6.x.x of Node
     // so instead to try to keep backward compatibility we decided to use a two stage bootloader strategy
     // which nomatter which current version of node you have installed will start with a very small
     // stage one that is where we'll keep backward compatibility, then run the app usin an own version
     // of Node specified in the first sage and eventually download it if not installed already
     //
-
+//  ----------------------------------- --------------------------- ---------------------------------
     let     ND
-    ,       me              =   process
-    ,       isOS            =   me.arch
-    ,       args            =   me.argv
-    ,       cmdLn           =   args[0]
-    ,       myName          =   args[1]
-    ,       myArch          =   'x64'
-    ,       nodeRequired    =   []
-    ,       iojsRequired    =   []
-    ,       symLinkCcommand 
-    ,       findNodeCommand 
-    ,       archPrfx
-    ,       app             // express app
-    ,       server          // express server
+    ,       nodeRequired        =   []
+    ,       iojsRequired        =   []
+    ,       app                     // express app
+    ,       server                  // express server
     ,       io
+    ,       _APP                =   {}
+    ,       cmd
+    ,       files
+    ,       main
+    ,       symLinkCommand 
+    ,       findNodeCommand 
+    ,       activateCommand
+    ,       archPrfx
+    ,       activateArgs
+    ,       symLinkArgs
     ;
-    
+//  ----------------------------------- --------------------------- ---------------------------------
+    ;
+//  ----------------------------------- --------------------------- ---------------------------------
     const   info            =   {
                                 version :   '0.0.3'
                             ,   desc    :   'Node Installation Manager aka NVM++'
                             }
+    ,       NIM             =   'nim'
     ,       path            =   require ('path')
     ,       os              =   require ('os')
     ,       fs              =   require ('fs')
@@ -75,12 +81,11 @@
     ,       copyFileSync    =   (srcFile,trgFile)   =>  {
                 exec("cmd",["/C","copy",toLocalOs(srcFile),toLocalOs(trgFile)],{  stdio: 'inherit' } );
     }
-    ,       _log            =   (...args)       =>  { Function.apply.call(console.log   ,console,args); }
-    ,       _err            =   (...args)       =>  { Function.apply.call(console.error ,console,args); }
-    ,       normalizeVer    =   (ver)           =>  { return (ver ? ver[0]=='v' ? ver : ver[0]=='V'? 'v'+ver.substring(1) : 'v'+ver : 'v_');  }
-    ,       normalizeArch   =   (arch)          =>  { return archPrfx+ (arch || myArch); }
-    ,       NIM             =   'nim'
-    ,       usage           =   ()              =>  {
+    ,       _log            =   (...args)           =>  { Function.apply.call(console.log   ,console,args); }
+    ,       _err            =   (...args)           =>  { Function.apply.call(console.error ,console,args); }
+    ,       normalizeVer    =   (ver)               =>  { return (ver ? ver[0]=='v' ? ver : ver[0]=='V'? 'v'+ver.substring(1) : 'v'+ver : 'v_');  }
+    ,       normalizeArch   =   (arch)              =>  { return archPrfx+ (arch || myArch); }
+    ,       usage           =   ()                  =>  {
         _log('Usage:');
         _log('');
         _log('   '+NIM+' arch                             : Show whichever arch node is using.'                               );
@@ -96,23 +101,24 @@
         
     }
     ,       downloadFiles   =   (url,dir,list
-                                ,npmUrl,npmVer) =>  {
+                                ,npmUrl,npmVer)     =>  {
              try { 
                 request.head(url,(err, res, body) => {
                     if (!err && res.statusCode == 200) {
-                     var inProg     =   []  
-                     ,   inProgIdx  =   0
-                     ;
+                        var i
+                        ,   inProg     =   []  
+                        ,   inProgIdx  =   0
+                        ;
                      
                      try { 
                         var pos =dir.lastIndexOf('/')
-                            vDir=dir.substring(0,pos);
+                        ,   vDir=dir.substring(0,pos)
                         ;
                         try { fs.mkdirSync(vDir); }catch (_e) {}
                         fs.mkdirSync(dir); 
                      }
                      catch (e){ if (e.code!='EEXIST'){ _err(e);  return -1; } }
-                     
+
                      for (i in list) {
                         var fName= list[i]
                         ,   fPath   = dir+'/'+fName
@@ -179,8 +185,8 @@
                       return true;
                      }   
                      , () =>{
-                        npmDir=dir+'/node_modules'; 
-                        var npmTempPath =   npmDir+'/npm-'+npmVer
+                        var npmDir=dir+'/node_modules' 
+                        ,   npmTempPath =   npmDir+'/npm-'+npmVer
                         ,   npmPath     =   npmDir+'/npm'
                         ;
 
@@ -228,26 +234,9 @@
                     return val;
                 });
             }
-    ;
-
-    //  ===================================================== GUI Configuration
-    const   _APP                =   {};
-            _APP.PUBLIC_HTML    = '/GUI'; 
-            _APP.BOWER_DIR      = '/js-libs';
-            _APP.LISTEN_PORT    = process.env.PORT || 1111;
-            _APP.URL_BASE       = 'http://localhost';
-            _APP.log            = _log
-            _APP.err            = _err
-            _APP.timeSt         = (name)  => { return timers[name]= (new Date()).getTime();};
-            _APP.timeEn         = (name)  => { return (new Date()).valueOf() - timers[name];};
-            _APP.full_list      = ND
-            _                   = _APP;
-
-    //  ===================================================== 
-    const   qtd             =   (s)             =>  { return "'"+s+"'"; }
-    ,       toLocal         =   (s)             =>  { return s.replace(new RegExp('/', 'g'),'\\'); }
-    
-    ,       do_ARCH         =   (cmd,newA)      =>  {
+    ,       qtd             =   (s)                 =>  { return "'"+s+"'"; }
+    ,       toLocal         =   (s)                 =>  { return s.replace(new RegExp('/', 'g'),'\\'); }
+    ,       do_ARCH         =   (cmd,newA)          =>  {
                 try {               
                     // probably we better write it to a file instead
                     let nf  = fs.readlinkSync   (nodeFolder)
@@ -276,7 +265,7 @@
                  return null;
                 }
             }
-    ,       do_LIST         =   (cmd,avlbl)     =>  { 
+    ,       do_LIST         =   (cmd,avlbl)         =>  { 
                 var av          = avlbl && avlbl.length>1 && 'available'.startsWith(avlbl.toLowerCase())
                 ,   nodeVerURL  = nodeDistBase+'index.json'
                 ,   iojsVerURL  = iojsDistBase+'index.json'
@@ -519,7 +508,7 @@
                     return null;
                 }
             }        
-    ,       do_ACTIVATE     =   (cmd)           =>  {
+    ,       do_ACTIVATE     =   (cmd)               =>  {
                 _log("nodeFolder: '"+nodeFolder+"' nodeStoreDir: '"+nodeStoreDir+"'");
                 var data = fs.readFileSync('whereIsNode', "utf8")
                 ,   nodeProgDir
@@ -545,7 +534,7 @@
 
                         
             }
-    ,       do_USE          =   (cmd,_ver,_arch)=>  {
+    ,       do_USE          =   (cmd,_ver,_arch)    =>  {
                 let ver     = normalizeVer  (_ver)
                 ,   arch    = normalizeArch (_arch)
                 ,   vPath   = nodeStoreDir + ver 
@@ -595,7 +584,7 @@
                     me.exitCode = -2;
                 }
             }
-    ,       do_INSTALL      =   (cmd,_ver,_arch)=>  {
+    ,       do_INSTALL      =   (cmd,_ver,_arch)    =>  {
                 var ver     = normalizeVer  (_ver)
                 ,   arch    = normalizeArch (_arch)
                 ,   vPath   = ver+'/'
@@ -607,6 +596,7 @@
                 ,   NPMv
                 ,   urlBase
                 ,   requires
+                ,   v
                 ;
         
                 _log('installing version: ',_ver);
@@ -625,10 +615,13 @@
                                     urlBase =nodeDistBase;
                                     requires=nodeRequired;
                                     break;
-                                case 'IOJS':    
+                                case 'IO.JS':    
                                     urlBase=iojsDistBase;
                                     requires=iojsRequired;
                                     break;
+                                default:
+                                    _err("unexpected source:",vInf.origin) ;   
+                                    me.exit(66);
                             }
                             break;
                         }
@@ -642,28 +635,30 @@
                     _err("we can't find any version info, please run [nim list available] first!");
                     return;
                 } 
-                    
-                request.head(urlBase+vPath,function (err, response, body) {
-                    _log(urlBase+vPath, err,response.statusCode,"'"+body+"'");
-                   if (!err && response.statusCode == 200) {
-                        let a
-                        ,   vDir
-                        ,   archs = validArchPaths.win[arch.endsWith('64')?1:0]
-                        for (a in archs) {
+                  
+                try {  
+                    request.head(urlBase+vPath,function (err, response, body) {
+                        _log(urlBase+vPath, err,response.statusCode,"'"+body+"'");
+                        let vDir;
+                        if (!err && response.statusCode == 200) {
+                            let a
+                            ,   archs = validArchPaths.win[arch.endsWith('64')?1:0]
+                            for (a in archs) {
                          vDir=vPath+archs[a];   
                          downloadFiles(urlBase+vDir,nodeStoreDir+vDir,requires
                                       ,npmDistBase,NPMv  );
                         }
-                   }
-                    else {
-                        notFnd1 = true;
-                        _err("can't find actual version for",vDir,archs);
-                    }
-                    
-                });
+                        }
+                        else {
+                            notFnd1 = true;
+                            _err("can't find actual version for",vDir,archs);
+                        }
+                    });
+                }
+                catch(ex){ _err(ex.message); me.exit(66); }
         
             }
-    ,       do_REMOVE       =   (cmd,_ver,_arch)=>  {
+    ,       do_REMOVE       =   (cmd,_ver,_arch)    =>  {
                 var ver     = normalizedVer (_ver)
                 ,   arch    = normalizedArch(_arch)
                 ,   vPath   = nodeStoreDir + ver + '/' + arch
@@ -682,13 +677,13 @@
                     _err('not found: ['+ver+'] ('+arch+')');  
                 }    
             }
-    ,       do_VERSION      =   (cmd)           =>  {
+    ,       do_VERSION      =   (cmd)               =>  {
                 _log(info.version);
             }      
-    ,       do_ROOT         =   (cmd,where)     =>  {
+    ,       do_ROOT         =   (cmd,where)         =>  {
                 _log('not implemented yet!');
             }
-    ,       do_GUI          =   (cmd,show)      =>  {
+    ,       do_GUI          =   (cmd,show)          =>  {
              try{   
                 app=express();
                 // setup static content folders 
@@ -742,33 +737,55 @@
              }       
             }
     ;            
+//  ----------------------------------- --------------------------- ---------------------------------
+//  ----------------------------------- --------------------------- ---------------------------------
 
+    //  ===================================================== 
+    //  ===================================================== GUI Configuration
+            _APP.PUBLIC_HTML    =   '/GUI'; 
+            _APP.BOWER_DIR      =   '/js-libs';
+            _APP.LISTEN_PORT    =   process.env.PORT || 1111;
+            _APP.URL_BASE       =   'http://localhost';
+            _APP.log            =   _log
+            _APP.err            =   _err
+            _APP.timeSt         =   (name)  => { return timers[name]= (new Date()).getTime();};
+            _APP.timeEn         =   (name)  => { return (new Date()).valueOf() - timers[name];};
+            _APP.full_list      =   ND
+        let _                   =   _APP
+        ,   me                  =   process
+        ,   isOS                =   me.arch
+        ,   args                =   me.argv
+        ,   cmdLn               =   args[0]
+        ,   myName              =   args[1]
+        ,   myArch              =   'x64'
+        ;
+    //  ===================================================== 
+//  ----------------------------------- --------------------------- ---------------------------------
+//  ----------------------------------- --------------------------- ---------------------------------
     fs.readFile('./full_list.json', function read(err, data) {
         if (err){
-          _err("unexpected error",err)
+          _.err("unexpected error",err)
           return;  
         } 
         _APP.full_list = JSON.parse(data.toString());
     });
-
-    
+//  ----------------------------------- --------------------------- ---------------------------------
     args.splice(0,2);
+//  ----------------------------------- --------------------------- ---------------------------------
+    me.on('exit', function (c) { 
+        _.log("exit code:",c);
+        process.exit(c); 
+    })
+//  ----------------------------------- --------------------------- ---------------------------------
 
-    me.on('exit', function (c) { process.exit(c); })
-
-    var cmd
-    ,   files
-    ,   main
-    ;
-    
     switch (isOS) {
         case    'x86':
         case    'x64':
-                        findNodeCommand = 'findFile.cmd'
-                        symLinkCommand  = 'sudo.cmd'
-                        activateCommand = 'sudo.cmd'
-                        activateArgs    = ['activate']
-                        symLinkArgs     = ['mklink'     ,'/D']
+                        findNodeCommand = 'findFile.cmd';
+                        symLinkCommand  = 'sudo.cmd';
+                        activateCommand = 'sudo.cmd';
+                        activateArgs    = ['activate'];
+                        symLinkArgs     = ['mklink'     ,'/D'];
                         nodeRequired    = ['node.exe','node.lib'];
                         iojsRequired    = ['iojs.exe','iojs.lib'];
                         archPrfx        = 'win-';
@@ -787,8 +804,8 @@
          exit("can't find Node installation dir",ex);   
     }
     
+//  ----------------------------------- --------------------------- ---------------------------------
     main = function () {
-    
         try {
             cmd = args[0] && args[0].toLowerCase();
                  if ('arch'     .startsWith(cmd))   do_ARCH     (cmd,args[1]);                          // show or set default Arch
@@ -816,3 +833,4 @@
         }
 
     };
+//  ----------------------------------- --------------------------- ---------------------------------
