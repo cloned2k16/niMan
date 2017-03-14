@@ -12,7 +12,8 @@ WARNING:
 
 # Installation - Usage
 
-after cloning it wherever you'd like to ..
+after cloning the repository wherever you'd like to ..  
+(or using NPM [''npm install -g niman''])  
 
 just type:  
 ```
