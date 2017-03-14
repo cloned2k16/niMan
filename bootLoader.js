@@ -98,6 +98,9 @@
     ,   myARCH          =   'win-'+isOS;
     ;
     
+    
+    me.chdir(__dirname);            // work inside local folder!
+    
     switch (isOS) {
         case    'x86':
         case    'x64':
