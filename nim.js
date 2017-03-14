@@ -7,13 +7,11 @@
     // of Node specified in the first sage and eventually download it if not installed already
     //
 //  ----------------------------------- --------------------------- ---------------------------------
-    let     ND
+    let     none
     ,       nodeRequired        =   []
     ,       iojsRequired        =   []
     ,       app                     // express app
     ,       server                  // express server
-    ,       io
-    ,       _APP                =   {}
     ,       cmd
     ,       files
     ,       main
@@ -27,11 +25,12 @@
 //  ----------------------------------- --------------------------- ---------------------------------
     ;
 //  ----------------------------------- --------------------------- ---------------------------------
-    const   info            =   {
-                                version :   '0.0.3'
+    const   ND              =   undefined
+    ,       info            =   {
+                                version :   '0.0.10'
                             ,   desc    :   'Node Installation Manager aka NVM++'
                             }
-    ,       NIM             =   'nim'
+    ,       _APP            =   {}
     ,       path            =   require ('path')
     ,       os              =   require ('os')
     ,       fs              =   require ('fs')
@@ -44,6 +43,33 @@
     ,       express         =   require ('express')
     ,       morgan          =   require ('morgan')
     ,       socketIO        =   require ('socket.io')
+    ,       NIM             =   'nim'
+    ,       _CON            =   console
+    ,       pathSep         =   path.sep
+    ,       strFormat       =   function ()             {
+                var s   = arguments[0]
+                ,   i   = 1
+                ;
+                return s.replace(/%((%)|s|d|i)/g, function (m) {
+                    var val = arguments[i];
+                    switch (m) {
+                        case '%i':
+                            val = parseInt    (val);
+                            break;
+                        case '%d':
+                            val = parseFloat  (val);
+                            break;
+                    }
+                    i++;
+                    return val;
+                });
+            }
+    ,       qtd             =   (s)                 =>  { return "'"+s+"'"; }
+    ,       _cout           =   (t,...a)            =>  { Function.apply.call(t ,_CON,a); }
+    ,       _log            =   (...a)              =>  { _cout(_CON.error  ,...a); }
+    ,       _wrn            =   (...a)              =>  { _cout(_CON.warn   ,...a); }
+    ,       _err            =   (...a)              =>  { _cout(_CON.log    ,...a); }
+    ,       toLocal         =   (s)                 =>  { return s.replace(new RegExp('/', 'g'),'\\'); }
     
     ,       validArchs      =   {   'win'   :   ['x86','x64']
                                 ,   'arm'   :   ['arm64','arm6l','arm7l']
@@ -55,7 +81,6 @@
                                 ,   'darwin':   [   ['']                    ]                           
                             }
                             
-    ,       pathSep         =   path.sep
     ,       nodeFolder      =   './inuse/'          // default location
     ,       nodeExtens      =   '.exe'
     ,       nodeStoreDir    =   './dist/'
@@ -81,8 +106,6 @@
     ,       copyFileSync    =   (srcFile,trgFile)   =>  {
                 exec("cmd",["/C","copy",toLocalOs(srcFile),toLocalOs(trgFile)],{  stdio: 'inherit' } );
     }
-    ,       _log            =   (...args)           =>  { Function.apply.call(console.log   ,console,args); }
-    ,       _err            =   (...args)           =>  { Function.apply.call(console.error ,console,args); }
     ,       normalizeVer    =   (ver)               =>  { return (ver ? ver[0]=='v' ? ver : ver[0]=='V'? 'v'+ver.substring(1) : 'v'+ver : 'v_');  }
     ,       normalizeArch   =   (arch)              =>  { return archPrfx+ (arch || myArch); }
     ,       usage           =   ()                  =>  {
@@ -216,26 +239,6 @@
              catch (ex) { _err(ex,-123); }
              return -1;
     }
-    ,       strFormat       =   function ()  {
-                var s   = arguments[0]
-                ,   i   = 1
-                ;
-                return s.replace(/%((%)|s|d|i)/g, function (m) {
-                    var val = arguments[i];
-                    switch (m) {
-                        case '%i':
-                            val = parseInt    (val);
-                            break;
-                        case '%d':
-                            val = parseFloat  (val);
-                            break;
-                    }
-                    i++;
-                    return val;
-                });
-            }
-    ,       qtd             =   (s)                 =>  { return "'"+s+"'"; }
-    ,       toLocal         =   (s)                 =>  { return s.replace(new RegExp('/', 'g'),'\\'); }
     ,       do_ARCH         =   (cmd,newA)          =>  {
                 try {               
                     // probably we better write it to a file instead
@@ -243,6 +246,7 @@
                     ,   p1  = nf.lastIndexOf    (pathSep)
                     ,   p2  = nf.lastIndexOf    ('-')
                     ,   arc = nf.substring      ((p2>0?p2:p1)+1)
+                    ,   newA
                     ;
                     newA = newA && newA.toLowerCase();  
                     if (ND !== newA) {
@@ -458,6 +462,9 @@
                 ,   ver
                 ,   arch    
                 ,   p1      
+                ,   fPath
+                ,   a
+                ,   vs
                 ;
                     try {
                         ver     = fs.readlinkSync   (nodeFolder);
@@ -476,7 +483,7 @@
                 
                
                 try {
-                     files = fs.readdirSync(nodeStoreDir);
+                    files = fs.readdirSync(nodeStoreDir);
                     if (files[0].name) {/* force err if not present */}
                     for (i in files){
                         name = files[i];
@@ -492,8 +499,8 @@
                                     p1     =   archN.lastIndexOf('-')
                                     archN  = (p1<0?archN:archN.substring(p1+1));
                                     _log('\t\t   ',name, ' ('+archN+')');
-                                    var vs = {};
-                                        vs[name] = archN;
+                                    vs = {};
+                                    vs[name] = archN;
                                     if (ver==name && arch==archN) vs.xyw=true;               
                                     list[list.length]=vs;
                                 }
@@ -504,6 +511,7 @@
                     return list;
                 }
                 catch (exc){
+                    _err(exc);
                     _log('sorry looks like you have none installed');
                     return null;
                 }
@@ -540,6 +548,7 @@
                 ,   vPath   = nodeStoreDir + ver 
                 ,   found   = false
                 ,   archs   = validArchPaths.win[arch.endsWith('64')?1:0]
+                ,   aa
                 ;
                 
                 for (aa in archs){
@@ -723,7 +732,7 @@
                 }); 
 
                 
-                io     = socketIO.listen(server);
+                let io     = socketIO.listen(server);
                 
                 if (!show){
                  var child=childProc.spawn("cmd",['/C','START',_.URL_BASE+':'+_.LISTEN_PORT, cmd] );
@@ -751,6 +760,7 @@
             _APP.timeSt         =   (name)  => { return timers[name]= (new Date()).getTime();};
             _APP.timeEn         =   (name)  => { return (new Date()).valueOf() - timers[name];};
             _APP.full_list      =   ND
+            
         let _                   =   _APP
         ,   me                  =   process
         ,   isOS                =   me.arch
