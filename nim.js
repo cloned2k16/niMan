@@ -264,8 +264,8 @@
                         return arc;
                     }    
                 }
-                catch (ex) { 
-                 _log("it looks like we don't have any version installed yet .."); 
+                catch (ex) { // if there's no version 'in use' ..
+                 _log("it looks like we don't have any version in use (yet) .."); 
                  return null;
                 }
             }
