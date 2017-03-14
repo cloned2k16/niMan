@@ -31,7 +31,6 @@ node_modules
 
 # Optional REPL history
 .node_repl_history
-/my
 /iojs_dist.json
 /iojs_dist.lst
 /node_dist.json
