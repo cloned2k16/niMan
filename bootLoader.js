@@ -193,14 +193,19 @@
                 catch (err){ exit("sorry can't install NPM:",err.message); }
                 
                 if (!fs.existsSync(distFolder+myNodeVer)){
-                    _log('put my own node version in list ..')
-                    linkDirSync(myNodePath,distFolder+myNodeVer);
+                    _log('put my own node version in list ..');
+                    try {
+                        linkDirSync(myNodePath,distFolder+myNodeVer);
+                    }
+                    catch(ex){ _err(ex.message); }    
                 }
                     
                 if (!fs.existsSync('node_modules')){         
                     _log("installing packages...");
-                
-                    exec(toLocalOs(npmCommandFile),["install"],{  stdio: 'inherit' } );
+                    try {
+                        exec(toLocalOs(npmCommandFile),["install"],{  stdio: 'inherit' } );
+                    }
+                    catch(ex){ _err(ex.message); }    
                 }
                 
                 
