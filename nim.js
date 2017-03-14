@@ -27,7 +27,7 @@
 //  ----------------------------------- --------------------------- ---------------------------------
     const   ND              =   undefined
     ,       info            =   {
-                                version :   '0.0.10'
+                                version :   '0.0.11'
                             ,   desc    :   'Node Installation Manager aka NVM++'
                             }
     ,       _APP            =   {}
@@ -548,7 +548,7 @@
                 ,   vPath   = nodeStoreDir + ver 
                 ,   found   = false
                 ,   archs   = validArchPaths.win[arch.endsWith('64')?1:0]
-                ,   aa
+                ,   aa,i
                 ;
                 
                 for (aa in archs){
