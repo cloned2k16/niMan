@@ -98,7 +98,7 @@
     ,   myARCH          =   'win-'+isOS;
     ;
     
-    
+    let __CWD=process.cwd();
     me.chdir(__dirname);            // work inside local folder!
     
     switch (isOS) {
@@ -210,7 +210,14 @@
                 
                 
                 var child=childProc.spawn(cmdLine,argss,{  stdio: 'inherit' } );
-                child.on('error',function (err) { _err(err);    me.exit(-123);  });
-                child.on('exit', function (code){               me.exit(code)   });
+                child.on('error',function (err) { 
+                    _err(err);    
+                    me.chdir(__CWD);
+                    me.exit(-123);  
+                });
+                child.on('exit', function (code){               
+                    me.chdir(__CWD);
+                    me.exit(code)   
+                });
         });
     
