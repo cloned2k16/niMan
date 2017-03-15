@@ -1,7 +1,7 @@
 {
         "name"              :   "niman"
     ,   "description"       :   "A Flexible Installation Manager for Node JS ( NVM plus )"
-    ,   "version"           :   "0.0.17"
+    ,   "version"           :   "0.0.18"
     ,   "license"           :   "MIT"
     ,   "main"              :   "bootLoader.js"
     ,   "preferGlobal"      :   "true"
@@ -13,8 +13,6 @@
                                 ,   "w4it"      :   ""
                                 ,   "request"   :   ""
                                 ,   "express"   :   ""
-                                ,   "morgan"    :   ""
-                                ,   "socket.io" :   ""
                             }    
     ,   "scripts"           :   {
                                     "test"      :   "nim list available"

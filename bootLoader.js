@@ -52,7 +52,7 @@
         if (!fs.existsSync(trgDir)){
             exec('cmd',['/C','mkDir',toLocalOs(trgDir)],{  stdio: 'inherit' } );
         }
-        exec("sudo.cmd",["mklink","/D",toLocalOs(trgDir+'/'+myARCH),toLocalOs(process.cwd()+'/'+srcDir)],{  stdio: 'inherit' } );
+        exec("sudo.cmd",["mklink","/D",toLocalOs(trgDir+'/'+myARCH),toLocalOs(__dirname+'/'+srcDir)],{  stdio: 'inherit' } );
     }
     ,   copyDirSync     =   function    (srcDir,trgDir)     {
         exec("cmd",["/C","xcopy","/E","/J","/I",toLocalOs(srcDir),toLocalOs(trgDir)],{  stdio: 'inherit' } );

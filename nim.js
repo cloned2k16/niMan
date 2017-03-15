@@ -38,8 +38,6 @@
     ,       childProc       =   require ('child_process')
     ,       exec            =   childProc.execFileSync 
     ,       express         =   require ('express')
-    ,       morgan          =   require ('morgan')
-    ,       socketIO        =   require ('socket.io')
     ,       NIM             =   'nim'
     ,       _CON            =   console
     ,       pathSep         =   path.sep
@@ -721,16 +719,12 @@
                     
                 });    
                 
-                morgan && app.use(morgan('dev'));                                   // log every request to the console
                 app.use(function(req, res){ res.sendStatus(404);});                 // simply NOT FOUND
                 // ====================================================== Main 
                 server = app.listen(_.LISTEN_PORT,  () => {
                   _.log('Express server listening on '+_.URL_BASE+':'+_.LISTEN_PORT+'/');
                 }); 
 
-                
-                let io     = socketIO.listen(server);
-                
                 if (!show){
                  var child=childProc.spawn("cmd",['/C','START',_.URL_BASE+':'+_.LISTEN_PORT, cmd] );
                     child.on('error',function (err) { _.err(err);    me.exit(-123);  });
