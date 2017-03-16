@@ -53,6 +53,24 @@
         }
         catch (e) { log (e); }    
     }
+    ,   getLang         =   function  ()                        {
+
+        if (navigator.languages !== ND) return navigator.languages[0]; 
+
+        else return navigator.language;
+
+    }
+    ,   toLocale        =   function  (ds)                      { 
+
+            var da      = ds.split("-")
+
+            ,   date    = new Date(da[0], da[1]-1,da[2])
+
+            ;
+
+            return date.toLocaleDateString(getLang(),{ 'month' : 'short','year':'numeric','day':'numeric'})
+
+    }    
     ,   _newHtmlEl      =   function  (el)                      { return _D.createElementNS  ('http://www.w3.org/1999/xhtml', el);   }
     ,   _log            =   function  ()                        { _FN.call(console.log, console, arguments); }
     ,   _OrEmpty        =   function  (v)                       { return v?v:''; } 
@@ -87,14 +105,14 @@
                  for (v in list){
                   var ver=list[v];
                   tbl.innerHTML+='<TR><TD><A target=dist href="' + (ver.origin == 'NODE' ? 'https://nodejs.org/dist/' : 'https://iojs.org/dist/') + ver.version + '/">' +ver.version+'</A>'
-                                +'</TD><TD>'+_OrEmpty(ver.origin    )
-                                +'</TD><TD>'+_OrEmpty(ver.date      )
-                                +'</TD><TD>'+_OrEmpty(ver.lts       )
-                                +'</TD><TD>'+_OrEmpty(ver.npm       )
-                                +'</TD><TD>'+_OrEmpty(ver.v8        )
-                                +'</TD><TD>'+_OrEmpty(ver.openssl   )
-                                +'</TD><TD>'+_OrEmpty(ver.zlib      )
-                                +'</TD><TD>'+_OrEmpty(ver.uv        )
+                                +'</TD><TD>'+_OrEmpty(ver.origin            )
+                                +'</TD><TD>'+_OrEmpty(toLocale(ver.date)    )
+                                +'</TD><TD>'+_OrEmpty(ver.lts               )
+                                +'</TD><TD>'+_OrEmpty(ver.npm               )
+                                +'</TD><TD>'+_OrEmpty(ver.v8                )
+                                +'</TD><TD>'+_OrEmpty(ver.openssl           )
+                                +'</TD><TD>'+_OrEmpty(ver.zlib              )
+                                +'</TD><TD>'+_OrEmpty(ver.uv                )
                                 +'</TD></TR>';
                  }
     }
