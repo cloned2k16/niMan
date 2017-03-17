@@ -8,7 +8,6 @@
     ,   os              =   require ('os')
     ,   fs              =   require ('fs')  
     ,   http            =   require ('https')
-    ,   zlib            =   require ('zlib')
     ,   childProc       =   require ('child_process')
     ,   exec            =   childProc.execFileSync 
     ,   w4it            =   require ('./js-libs/w4it')
