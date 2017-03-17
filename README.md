@@ -1,5 +1,7 @@
 # niMan  
 ### aka NIM (Node Installation Manager)
+[![npm version](https://badge.fury.io/js/niman.svg)](https://badge.fury.io/js/niman)    
+[![NPM](https://nodei.co/npm/niman.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/niman/)  
 
 WARNING:
 
@@ -13,7 +15,7 @@ WARNING:
 # Installation - Usage
 
 after cloning the repository wherever you'd like to ..  
-(or using NPM [''npm install -g niman'']) [![npm version](https://badge.fury.io/js/niman.svg)](https://badge.fury.io/js/niman)  
+(or using NPM [''npm install -g niman''])  
 
 just type:  
 ```
