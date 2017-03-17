@@ -13,7 +13,7 @@ WARNING:
 # Installation - Usage
 
 after cloning the repository wherever you'd like to ..  
-(or using NPM [''npm install -g niman''])  
+(or using NPM [''npm install -g niman'']) [![npm version](https://badge.fury.io/js/niman.svg)](https://badge.fury.io/js/niman)  
 
 just type:  
 ```
