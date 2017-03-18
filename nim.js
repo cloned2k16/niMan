@@ -109,12 +109,13 @@
         _.log('   '+NIM+' arch                             : Show whichever arch node is using.'                               );
         _.log('   '+NIM+' install    <version>   [arch]    : Version can be any Node version either from NodeJs of IOJS'       );
         _.log('                                               see: http://cloned2k16.github.io/jsNVM/'                         );
-        _.log('   '+NIM+' list       [available]           : List the current installation list or the availables to download' );
+        _.log('   '+NIM+' list       [available | all]     : List the current installation list or the availables to download' );
         _.log('   '+NIM+' remove     <version>   [arch]    : Uninstall specified version'                                      );
         _.log('   '+NIM+' use        <version>   [arch]    : Switch to the specified version and optionally arch'              );
         _.log('   '+NIM+' root       [path]                : Set or Show where all the versions are stored into'               );
         _.log('   '+NIM+' version                          : Shows the version of this tool'                                   );
         _.log('');
+        //_.log('   '+NIM+' on|off                           : Switches NIM version as primary (global) version'                 );
         _.log('   '+NIM+' gui                              : Start an useful graphical interface (web)                       ' );
         
     }
@@ -265,12 +266,14 @@
                 }
             }
     ,       do_LIST         =   (cmd,avlbl)         =>  { 
-                var av          = avlbl && avlbl.length>1 && 'available'.startsWith(avlbl.toLowerCase())
+                avlbl           = avlbl ? avlbl.toLowerCase() : ND;
+                var lstAll      = 'all'
+                ,   av          = 'available'.startsWith(avlbl) || avlbl==lstAll
                 ,   nodeVerURL  = nodeDistBase+'index.json'
                 ,   iojsVerURL  = iojsDistBase+'index.json'
                 ;
                 
-                if (av) { _.log('listing avaiables');
+                if (av) { 
                     
                     _.ND                =   ND;    
                     _.nodeList          = _.ND;
@@ -379,7 +382,7 @@
                     w4it.enableAnimation();
                     w4it.done(  () => { return !(_.nodeReqInProgress || _.iojsReqInProgress); },
                                 () => {
-                            _.log('BOTH FINISHED!\n' );
+                            
                         try{        
                             var total       =   0
                             ,   nodeLen     =   _.nodeList? _.nodeList.length : 0
@@ -423,16 +426,21 @@
                             ,   last
                             ;
                             j=0;
-                
-                            for (i = 0; i < merged.length ; i++) {
-                                rel     = merged[i];
-                                curr    = numeric(rel.version).substring(0,3);
-                                if (last!=curr) {
-                                    last=curr;
-                                    mileStones[j++]=rel;
-                                }  
+                           
+                            if (avlbl==lstAll){
+                                mileStones=merged;
                             }
-                
+                            else{
+                                for (i = 0; i < merged.length ; i++) {
+                                    rel     = merged[i];
+                                    curr    = numeric(rel.version).substring(0,3);
+                                    if (last!=curr) {
+                                        last=curr;
+                                        mileStones[j++]=rel;
+                                    }  
+                                }
+                            }
+                            
                             _.log('\n\n\t_-== Version ==-_-== LTS ==-_-== ORIGIN ==-_\n');
                             for (i=0 ; i < mileStones.length ;i++) {
                                 rel =   mileStones[i];

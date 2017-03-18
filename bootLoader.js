@@ -17,11 +17,11 @@
     ,   launchSffx      
     ,   bootFile        =   'nim'
     ,   myNodeFile      =   'node'
-    ,   myNodeFile2                                                                                     // windows only
+    ,   myNodeFile2                                                                                     //  windows only
     ,   myNodePath      =   'my'
-    ,   myNodeFileExt                                                                                   // windows only ?
-    ,   myNodeVer       =   'v6.2.1'
-    ,   myNPM           =   'v3.9.3'
+    ,   myNodeFileExt                                                                                   //  windows only ?
+    ,   myNodeVer       =   'v6.10.0'                                                                   //  LTS Boron
+    ,   myNPM           =   'v3.10.10'
     ,   npmExtractPath
     ,   npmPath
     ,   myNpnZipFile   
