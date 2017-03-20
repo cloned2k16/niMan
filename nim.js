@@ -37,7 +37,8 @@
     ,       request         =   require ('request')
     ,       childProc       =   require ('child_process')
     ,       exec            =   childProc.execFileSync 
-    ,       express         =   require ('express')
+    //,       express         =   require ('express')
+    ,       httpD           =   require ('http-d')
     ,       NIM             =   'nim'
     ,       _CON            =   console
     ,       pathSep         =   path.sep
@@ -697,6 +698,7 @@
             }
     ,       do_GUI          =   (cmd,show)          =>  {
              try{   
+                /*
                 app=express();
                 // setup static content folders 
                 app.use(express.static(__dirname + _.PUBLIC_HTML));                 //
@@ -732,7 +734,17 @@
                 server = app.listen(_.LISTEN_PORT,  () => {
                   _.log('Express server listening on '+_.URL_BASE+':'+_.LISTEN_PORT+'/');
                 }); 
+                */
+                
+                _.log(httpD.Name,httpD.Version);
+                
+                httpD.setStaticFolders  ([__dirname + _.PUBLIC_HTML,__dirname + _.BOWER_DIR]);
+                httpD.map               ('/cmmnd'                   ,function (req,res,args) {
+                        return '[{"v6.10.0":"x64"}]';
+                });     
+                httpD.listen(_.LISTEN_PORT);
 
+                
                 if (!show){
                  var child=childProc.spawn("cmd",['/C','START',_.URL_BASE+':'+_.LISTEN_PORT, cmd] );
                     child.on('error',function (err) { _.err(err);    me.exit(-123);  });
