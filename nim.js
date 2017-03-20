@@ -698,51 +698,34 @@
             }
     ,       do_GUI          =   (cmd,show)          =>  {
              try{   
-                /*
-                app=express();
-                // setup static content folders 
-                app.use(express.static(__dirname + _.PUBLIC_HTML));                 //
-                app.use(express.static(__dirname + _.BOWER_DIR  ));
-    
-   
-                app.use('/cmmnd', (reQ,res) => {// _.log('reQ',reQ);
-                    var H   = reQ.headers
-                    ,   R   = reQ.rawHeaders
-                    ,   U   = reQ._parsedUrl
-                    ,   fn  = U.query
-                    ;
+                _.log(httpD.Name,httpD.Version);
+                
+                httpD.setStaticFolders  ([__dirname + _.PUBLIC_HTML,__dirname + _.BOWER_DIR]);
+                httpD.map               ('/cmmnd'                   ,function (req,res,query) {
+                    
+                    var fn  = query;
+                    
                     switch (fn) {
                       case 'arch' :
                                     var arch = do_ARCH(fn);
-                                    if (arch) res.send(arch);
-                                    else     res.send('ERROR!');
+                                    if (arch) return arch;
+                                    else      return 'ERROR!';
                                     break;
                       case 'list' :
                                     var list = do_LIST(fn);
-                                    if (list) res.send(JSON.stringify(list));
-                                    else      res.send('ERROR!');
+                                    if (list) return JSON.stringify(list);
+                                    else      return 'ERROR!';
                                     break;
 
                         default:
                             res.send('unknown command');
                     }
-                    
-                });    
+                });  
                 
-                app.use(function(req, res){ res.sendStatus(404);});                 // simply NOT FOUND
-                // ====================================================== Main 
-                server = app.listen(_.LISTEN_PORT,  () => {
-                  _.log('Express server listening on '+_.URL_BASE+':'+_.LISTEN_PORT+'/');
-                }); 
-                */
+                httpD.listen(_.LISTEN_PORT );
                 
-                _.log(httpD.Name,httpD.Version);
-                
-                httpD.setStaticFolders  ([__dirname + _.PUBLIC_HTML,__dirname + _.BOWER_DIR]);
-                httpD.map               ('/cmmnd'                   ,function (req,res,args) {
-                        return '[{"v6.10.0":"x64"}]';
-                });     
-                httpD.listen(_.LISTEN_PORT);
+                //TODO!    
+                //  _.log('Express server listening on '+_.URL_BASE+':'+_.LISTEN_PORT+'/');
 
                 
                 if (!show){
