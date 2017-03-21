@@ -5,14 +5,22 @@
 
 WARNING:
 
-  ALPHA release so don't expect it to work bugless ..
+  BETA release so don't expect it to work bugless ..
   
   and is it still just intented to be used on Windows ... 
   (as replacement for NVM)
-    
+
+     altough it is working,  
+      it still doesn't override the main version of node,  
+       you have installed already ,  
+        to do so you have to put the 'inuse' folder inside the installation folder,
+         in the PATH and make sure comes before your original node installation  
+          if you installed it with NPM you may whant to use 'nim root' to know where actually is
+  
 :D
 
 # Installation - Usage
+
 
 after cloning the repository wherever you'd like to ..  
 (or using NPM [''npm install -g niman''])  
