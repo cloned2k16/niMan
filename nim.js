@@ -23,25 +23,21 @@
     ,       symLinkArgs
     ;
 //  ----------------------------------- --------------------------- ---------------------------------
-    ;
-//  ----------------------------------- --------------------------- ---------------------------------
     const   ND              =   undefined
     ,       info            =   {}                                                                      //  to keep in sync, we now fill this from package.json
     ,       _APP            =   {}                                                                      //  storing global references here ..
-    ,       path            =   require ('path')
-    ,       os              =   require ('os')
-    ,       fs              =   require ('fs')
-    ,       leftPad         =   require ('left_pad')
+    ,       Fs              =   require ('fs')
+    ,       Url             =   require ('url')
+    ,       Path            =   require ('path')
     ,       w4it            =   require ('w4it')
-    ,       http            =   require ('https')
-    ,       request         =   require ('request')
-    ,       childProc       =   require ('child_process')
-    ,       exec            =   childProc.execFileSync 
-    //,       express         =   require ('express')
-    ,       httpD           =   require ('http-d')
+    ,       Http            =   require ('https')
+    ,       HttpD           =   require ('http-d')
+    ,       LeftPad         =   require ('left_pad')
+    ,       ChildProc       =   require ('child_process')
+    ,       Exec            =   ChildProc.execFileSync 
     ,       NIM             =   'nim'
     ,       _CON            =   console
-    ,       pathSep         =   path.sep
+    ,       pathSep         =   Path.sep
     ,       strFormat       =   function ()             {
                 var s   = arguments[0]
                 ,   i   = 1
@@ -97,10 +93,10 @@
                 }
             }
     ,       copyDirSync     =   (srcDir,trgDir)     =>  {
-                exec("cmd",["/C","xcopy","/E","/J","/I",toLocalOs(srcDir),toLocalOs(trgDir)],{  stdio: 'inherit' } );
+                Exec("cmd",["/C","xcopy","/E","/J","/I",toLocalOs(srcDir),toLocalOs(trgDir)],{  stdio: 'inherit' } );
     }
     ,       copyFileSync    =   (srcFile,trgFile)   =>  {
-                exec("cmd",["/C","copy",toLocalOs(srcFile),toLocalOs(trgFile)],{  stdio: 'inherit' } );
+                Exec("cmd",["/C","copy",toLocalOs(srcFile),toLocalOs(trgFile)],{  stdio: 'inherit' } );
     }
     ,       normalizeVer    =   (ver)               =>  { return (ver ? ver[0]=='v' ? ver : ver[0]=='V'? 'v'+ver.substring(1) : 'v'+ver : 'v_');  }
     ,       normalizeArch   =   (arch)              =>  { return archPrfx+ (arch || myArch); }
@@ -123,19 +119,21 @@
     ,       downloadFiles   =   (url,dir,list
                                 ,npmUrl,npmVer)     =>  {
              try { 
-                request.head(url,(err, res, body) => {
-                    if (!err && res.statusCode == 200) {
+              var rHead = Http.head(url,(res) => {
+                    if ([200,301,302,304,307,308].indexOf(res.statusCode) >= 0) {
                         var i
                         ,   inProg     =   []  
                         ,   inProgIdx  =   0
                         ;
+                     //_.log(url,res.headers);   
+                     res.on('data', (chunk) => { _.log('@',chunk.toString()); });
                      
                      try { 
                         var pos =dir.lastIndexOf('/')
                         ,   vDir=dir.substring(0,pos)
                         ;
-                        try { fs.mkdirSync(vDir); }catch (_e) {}
-                        fs.mkdirSync(dir); 
+                        try { Fs.mkdirSync(vDir); }catch (_e) {}
+                        Fs.mkdirSync(dir); 
                      }
                      catch (e){ if (e.code!='EEXIST'){ _.err(e);  return -1; } }
 
@@ -144,18 +142,18 @@
                         ,   fPath   = dir+'/'+fName
                         ;
                        _.log('downloading.. ',url+'/'+fName,' into: ',fPath);
-                       if (fs.existsSync(fPath)){
+                       if (Fs.existsSync(fPath)){
                          inProg[inProgIdx]=false;  
                          continue;  
                        } 
                        inProg[inProgIdx]=true;  
                            
                        var  
-                            file    = fs.createWriteStream(fPath)
-                       ,    endErr  = ((ii,p) => { return (err) => { _.log('endErr',err,ii); fs.unlink(p); inProg[ii]=false; }})(i,fPath)
-                       ,    req     = http.get(url+'/'+fName, ((f,p,ii) => { return (res) =>{
+                            file    = Fs.createWriteStream(fPath)
+                       ,    endErr  = ((ii,p) => { return (err) => { _.log('endErr',err,ii); Fs.unlink(p); inProg[ii]=false; }})(i,fPath)
+                       ,    req     = Http.get(url+'/'+fName, ((f,p,ii) => { return (res) =>{
                             if (res.statusCode !== 200) {
-                                fs.unlink(p); 
+                                Fs.unlink(p); 
                                 return _.err(url+' status was ' + res.statusCode);
                             }
                             res.pipe(f);
@@ -165,7 +163,7 @@
                              ff.close();                          
                              if (fn.startsWith('iojs')) {
                                  //_.log('link to: ',dir+'/'+fn.replace('iojs','node'));
-                                 fs.linkSync(dir+'/'+fn, dir+'/'+fn.replace('iojs','node'))
+                                 Fs.linkSync(dir+'/'+fn, dir+'/'+fn.replace('iojs','node'))
                              }
                              inProg[ii]=false;  }})(ii,f) );
                        }})(file,fPath,inProgIdx++));
@@ -176,14 +174,14 @@
                     var fName   = npmVer+'.zip'
                     ,   fPath   = dir+'/'+fName
                     ;
-                     if (!fs.existsSync(fPath)){
+                     if (!Fs.existsSync(fPath)){
                         inProg[inProgIdx]=true;
                         _.log('downloading.. ',npmUrl+'v'+npmVer,' into: ',fPath);
-                        var  file    = fs.createWriteStream(fPath)
-                        ,    endErr  = ((ii,p) => { return (err) => { _.log('endErr',err,ii); fs.unlink(p); inProg[ii]=false; }})(i,fPath)
-                        ,    req     = http.get(npmUrl+'v'+npmVer, ((f,p,ii) => { return (res) =>{
+                        var  file    = Fs.createWriteStream(fPath)
+                        ,    endErr  = ((ii,p) => { return (err) => { _.log('endErr',err,ii); Fs.unlink(p); inProg[ii]=false; }})(i,fPath)
+                        ,    req     = Http.get(npmUrl+'v'+npmVer, ((f,p,ii) => { return (res) =>{
                             if (res.statusCode !== 200) {
-                                fs.unlink(p); 
+                                Fs.unlink(p); 
                                 return _.err('NPM status was ' + res.statusCode);
                             }
                             res.pipe(f);
@@ -213,15 +211,15 @@
                         _.log('DONE');
                         _.log('unzipping NPM in ',npmTempPath)
                         try {
-                            exec("cmd"    ,[ "/C","RMDIR","/S","/Q", toLocalOs(npmPath)     ]  ,{  stdio: 'inherit' } )
-                            exec("cmd"    ,[ "/C","RMDIR","/S","/Q", toLocalOs(npmTempPath) ]  ,{  stdio: 'inherit' } )
+                            Exec("cmd"    ,[ "/C","RMDIR","/S","/Q", toLocalOs(npmPath)     ]  ,{  stdio: 'inherit' } )
+                            Exec("cmd"    ,[ "/C","RMDIR","/S","/Q", toLocalOs(npmTempPath) ]  ,{  stdio: 'inherit' } )
                         }
                         catch(ee){ 
                             //_.err("error:",ee.message); 
                         }
-                        exec("xtract",[  fPath,   npmDir   ]       ,{  stdio: 'inherit' } )
+                        Exec("xtract",[  fPath,   npmDir   ]       ,{  stdio: 'inherit' } )
                          
-                        fs.renameSync   (npmTempPath,npmPath);
+                        Fs.renameSync   (npmTempPath,npmPath);
                         copyFileSync    (npmPath+'/bin/npm'       ,dir+'/npm');
                         copyFileSync    (npmPath+'/bin/npm.cmd'   ,dir+'/npm.cmd');
 
@@ -231,7 +229,7 @@
                     else {
                      return res.statusCode;
                     }
-                });
+                }).on('error', (err) => { _.err("Error downloading from:",url); });
              } 
              catch (ex) { _.err(ex,-123); }
              return -1;
@@ -239,7 +237,7 @@
     ,       do_ARCH         =   (cmd,newA)          =>  {
                 try {               
                     // probably we better write it to a file instead
-                    let nf  = fs.readlinkSync   (nodeFolder)
+                    let nf  = Fs.readlinkSync   (nodeFolder)
                     ,   p1  = nf.lastIndexOf    (pathSep)
                     ,   p2  = nf.lastIndexOf    ('-')
                     ,   arc = nf.substring      ((p2>0?p2:p1)+1)
@@ -286,37 +284,44 @@
                     _.iojsReqInProgress = true;
                     
                     
-                    request.get(nodeVerURL, function (err, response, body) {
+                    Http.get(nodeVerURL, ( response )   =>  {
                         try{
-                            if (!err && response.statusCode == 200) {
-                                fs.writeFile(nodeCacheFile, body, function(err) { 
-                                    if(err) {  _.log(err); } 
-                                    else {
-                                        var guiCacheFile='.'+_.PUBLIC_HTML+'/'+nodeCacheFile
-                                        fs.writeFileSync(guiCacheFile, fs.readFileSync(nodeCacheFile));
-                                    }
-                                }); 
+                            if (response.statusCode == 200) {
+                                var body='';
+                                response.on('data' , function (data) {
+                                    body += data.toString() ;
+                                }) ;
+                                response.on('end' ,  function() {
+                                
+                                    Fs.writeFile(nodeCacheFile, body, function(err) { 
+                                        if(err) {  _.log(err); } 
+                                        else {
+                                            var guiCacheFile='.'+_.PUBLIC_HTML+'/'+nodeCacheFile
+                                            Fs.writeFileSync(guiCacheFile, Fs.readFileSync(nodeCacheFile));
+                                        }
+                                    }); 
                             
-                                var res     =   JSON.parse(body);
-                                _.nodeList  =   res;
+                                    var res     =   JSON.parse(body);
+                                    _.nodeList  =   res;
         
-                                var vList   =   ""
-                                ,   stable  =   []
-                                ,   lts     =   []
-                                ;
-                                for (var v in res) { 
-                                    var ver=res[v]; 
-                                    if (!ver.lts) stable.push(ver);
-                                    else          lts   .push(ver);
-                                    vList+= strFormat('  %s\t\t[%s]\t\t%s\t\t%s\r\n',ver.version ,ver.lts?ver.lts:'',ver.date,ver.npm); 
-                                }
+                                    var vList   =   ""
+                                    ,   stable  =   []
+                                    ,   lts     =   []
+                                    ;
+                                    for (var v in res) { 
+                                        var ver=res[v]; 
+                                        if (!ver.lts) stable.push(ver);
+                                        else          lts   .push(ver);
+                                        vList+= strFormat('  %s\t\t[%s]\t\t%s\t\t%s\r\n',ver.version ,ver.lts?ver.lts:'',ver.date,ver.npm); 
+                                    }
         
-                                fs.writeFile(nodeCacheList, vList, function(err) {
-                                    if(err) { _.log(err); }
-                                }); 
-        
+                                    Fs.writeFile(nodeCacheList, vList, function(err) { 
+                                        if(err) { _.log(err); }
+                                        else _.nodeReqInProgress = false;
+                                    }); 
+                                }) ;
                             }
-                            else { 
+                            else { //   TODO FixME!!
                                 _.err (response.statusCode,err,_.log.error); 
                                 _.nodeError = { 'RES' : response , 'ERR' : err };
                             }   
@@ -324,37 +329,43 @@
                         catch ( e ){
                             _.log("EXCEPTION: ",e);
                         }
-                        _.nodeReqInProgress = false;
-                    });
+                        
+                    }).on('error', (err) => { _.err(err); } );
                     
-                    request.get(iojsVerURL, function (err, response, body) {
+                    Http.get(iojsVerURL, ( response )   =>  {
                         try{
-                            if (!err && response.statusCode == 200) {
-                                fs.writeFile(iojsCacheFile, body, function(err) {
-                                    if(err) { _.log(err); }
-                                    else {
-                                        var guiCacheFile='.'+_.PUBLIC_HTML+'/'+iojsCacheFile
-                                        fs.writeFileSync(guiCacheFile, fs.readFileSync(iojsCacheFile));
-                                    }
-                                }); 
+                            if (response.statusCode == 200) {
+                                var body='';
+                                response.on('data' , function (data) {
+                                    body += data.toString() ;
+                                }) ;
+                                response.on('end' ,  function() {
+                                    Fs.writeFile(iojsCacheFile, body, function(err) {
+                                        if(err) { _.log(err); }
+                                        else {
+                                            var guiCacheFile='.'+_.PUBLIC_HTML+'/'+iojsCacheFile
+                                            Fs.writeFileSync(guiCacheFile, Fs.readFileSync(iojsCacheFile));
+                                        }
+                                    }); 
         
-                                var res     =   JSON.parse(body)
-                                ,   vList   =   ""
-                                ;
-                                _.iojsList  =   res;
+                                    var res     =   JSON.parse(body)
+                                    ,   vList   =   ""
+                                    ;
+                                    _.iojsList  =   res;
         
                        
-                                for (var v in res) { 
-                                    var ver=res[v]; 
-                                    vList+= strFormat('  %s\t\t%s\t\t%s\r\n',ver.version, ver.date, ver.npm); 
-                                }
+                                    for (var v in res) { 
+                                        var ver=res[v]; 
+                                        vList+= strFormat('  %s\t\t%s\t\t%s\r\n',ver.version, ver.date, ver.npm); 
+                                    }
             
-                                fs.writeFile(iojsCacheList, vList, function(err) { 
-                                    if(err) {  _.log(err); } 
-                                });
-            
+                                    Fs.writeFile(iojsCacheList, vList, function(err) { 
+                                        if(err) {  _.log(err); } 
+                                        else _.iojsReqInProgress = false;
+                                    });
+                                }) ;
                             }
-                            else { 
+                            else { //   TODO FixME!!
                                 _.log (response.statusCode,err ,_.log.error); 
                                 _.iojsError = { 'RES' : response , 'ERR' : err };
                             }   
@@ -362,17 +373,17 @@
                         catch (e) {
                             _.log("Exception: ",e);
                         }                        
-                        _.iojsReqInProgress = false;
-                    });
+                        
+                    }).on('error', (err) => { _.err(err); } );
 
                     
-                    var rawStdout               = new fs.SyncWriteStream(1, { autoClose: false })
+                    var rawStdout               = new Fs.SyncWriteStream(1, { autoClose: false })
                     ,   numeric                 = function  ( vs )      {
                         vs = vs.substring(1);
                         vs = vs.split('.');
                         var len = vs.length;
                         if (len!=3) return 0;
-                        var num= leftPad(vs[0],3,0) + leftPad(vs[1],3,0) + leftPad(vs[2],4,0) ;
+                        var num= LeftPad(vs[0],3,0) + LeftPad(vs[1],3,0) + LeftPad(vs[2],4,0) ;
                         return num;
             
                     }
@@ -421,7 +432,7 @@
                             
                             _APP.full_list=merged;
                             
-                            fs.writeFile('full_list.json', JSON.stringify(merged), function(err) { if(err) { return _.log(err);  } });
+                            Fs.writeFile('full_list.json', JSON.stringify(merged), function(err) { if(err) { return _.log(err);  } });
                             var rel
                             ,   curr
                             ,   last
@@ -471,14 +482,14 @@
                 ,   vs
                 ;
                     try {
-                        ver     = fs.readlinkSync   (nodeFolder);
+                        ver     = Fs.readlinkSync   (nodeFolder);
                         p1      = ver.lastIndexOf   (pathSep);
                         arch    = ver.substring  (   p1+1);                          //get arch
                         ver     = ver.substring  (0, p1  );                          //strip arch
                         ver     = ver.substring  (   ver.lastIndexOf    (pathSep)+1); //strip base path
                         p1      = arch.lastIndexOf('-')
                         arch    = p1<0? arch : arch.substring(   p1+1);             //arch
-                        _.log('in use:',ver , arch);
+                        _.log('in use:',LeftPad('',12),ver ,LeftPad(arch,16-ver.length),'\n');
                     } 
                     catch (ee){ 
                      //_.log("sorry: can't find any version in use!"); return -1; 
@@ -487,22 +498,22 @@
                 
                
                 try {
-                    files = fs.readdirSync(nodeStoreDir);
+                    files = Fs.readdirSync(nodeStoreDir);
                     if (files[0].name) {/* force err if not present */}
                     for (i in files){
                         name = files[i];
                         fPath = nodeStoreDir + name;
-                        if (fs.statSync(fPath).isDirectory()){
-                            var archs=fs.readdirSync(fPath);
+                        if (Fs.statSync(fPath).isDirectory()){
+                            var archs=Fs.readdirSync(fPath);
                             for (a in archs) {
                                 var  archN   =   archs[a]
                                 ,    nPath   =   fPath + '/' + archN + '/node'+ nodeExtens
                                 ;
                                 try {
-                                    fs.statSync(nPath)
+                                    Fs.statSync(nPath)
                                     p1     =   archN.lastIndexOf('-')
                                     archN  = (p1<0?archN:archN.substring(p1+1));
-                                    _.log('\t\t   ',name, ' ('+archN+')');
+                                    _.log(LeftPad('',20),name,LeftPad('',10-name.length), LeftPad('('+archN+')',6));
                                     vs = {};
                                     vs[name] = archN;
                                     if (ver==name && arch==archN) vs.xyw=true;               
@@ -522,7 +533,7 @@
             }        
     ,       do_ACTIVATE     =   (cmd)               =>  {
                 _.log("nodeFolder: '"+nodeFolder+"' nodeStoreDir: '"+nodeStoreDir+"'");
-                var data = fs.readFileSync('whereIsNode', "utf8")
+                var data = Fs.readFileSync('whereIsNode', "utf8")
                 ,   nodeProgDir
                 ,   nodeFile
                 ;    
@@ -540,7 +551,7 @@
                 activateArgs.push(nodeFolder.subStr(0,nodeFolder.length-1));
                 activateArgs.push("> activate.log");
 
-                child=childProc.spawn(activateCommand ,activateArgs,{ stdio: 'inherit' } );
+                child=ChildProc.spawn(activateCommand ,activateArgs,{ stdio: 'inherit' } );
                 child.on('error',function (err) { _.err(err);    me.exit(-123);  });
                 child.on('exit', function (code){                me.exit(code)   });
 
@@ -557,7 +568,7 @@
                 
                 for (aa in archs){
                     var pp=vPath + '/' + archs[aa];
-                    if (fs.existsSync(pp)){
+                    if (Fs.existsSync(pp)){
                         vPath = pp;
                         found=true;
                         break;
@@ -570,14 +581,14 @@
                 }
                 
                 try {
-                    files = fs.readdirSync(vPath);
+                    files = Fs.readdirSync(vPath);
                     for (i in nodeRequired) if (0> files.indexOf(nodeRequired[i])) {
                         _.err("required file missing ["+nodeRequired[i]+"] ",files);
                         me.exitCode=-3; 
                     }
                     try {
 
-                        try { fs.rmdirSync   (nodeFolder); } catch(e) { }
+                        try { Fs.rmdirSync   (nodeFolder); } catch(e) { }
                         var slsh = /\//g
                         ,   bsls = '\\'  
                         ,   child
@@ -586,7 +597,7 @@
                         //    
                         symLinkArgs.push(nodeFolder   .replace(slsh,bsls));
                         symLinkArgs.push(vPath        .replace(slsh,bsls));
-                        child=childProc.spawn(symLinkCommand ,symLinkArgs,{  stdio: 'inherit' } );
+                        child=ChildProc.spawn(symLinkCommand ,symLinkArgs,{  stdio: 'inherit' } );
                         child.on('error',function (err) { _.err(err);    me.exit(-123);  });
                         child.on('exit', function (code){                me.exit(code)   });
                     }
@@ -650,23 +661,23 @@
                 } 
                   
                 try {  
-                    request.head(urlBase+vPath,function (err, response, body) {
-                        _.log(urlBase+vPath, err,response.statusCode,"'"+body+"'");
+                    Http.head(urlBase+vPath,function (response) {
+                        //_.log(urlBase+vPath, response.statusCode);
                         let vDir;
-                        if (!err && response.statusCode == 200) {
+                        if (response.statusCode == 200) {
                             let a
                             ,   archs = validArchPaths.win[arch.endsWith('64')?1:0]
                             for (a in archs) {
-                         vDir=vPath+archs[a];   
-                         downloadFiles(urlBase+vDir,nodeStoreDir+vDir,requires
-                                      ,npmDistBase,NPMv  );
-                        }
+                                vDir=vPath+archs[a];   
+                                downloadFiles(urlBase+vDir,nodeStoreDir+vDir,requires
+                                            ,npmDistBase,NPMv  );
+                            }
                         }
                         else {
                             notFnd1 = true;
                             _.err("can't find actual version for",vDir,archs);
                         }
-                    });
+                    }).on('error',(err) => { _.err(err); } );
                 }
                 catch(ex){ _.err(ex.message); me.exit(66); }
         
@@ -680,11 +691,11 @@
                 
                 _.log('removing: ',vPath);
                 try {
-                    files = fs.readdirSync(vPath);
+                    files = Fs.readdirSync(vPath);
                     for (i in files){
-                        fs.unlinkSync(vPath+'/'+files[i]);
+                        Fs.unlinkSync(vPath+'/'+files[i]);
                     }         
-                    fs.rmdirSync  (vPath);
+                    Fs.rmdirSync  (vPath);
                 }
                 catch (ex){ _.err(ex)
                     _.err('not found: ['+ver+'] ('+arch+')');  
@@ -698,10 +709,10 @@
             }
     ,       do_GUI          =   (cmd,show)          =>  {
              try{   
-                _.log(httpD.Name,httpD.Version);
+                _.log(HttpD.Name,HttpD.Version);
                 
-                httpD.setStaticFolders  ([__dirname + _.PUBLIC_HTML,__dirname + _.BOWER_DIR]);
-                httpD.map               ('/cmmnd'                   ,function (req,res,query) {
+                HttpD.setStaticFolders  ([__dirname + _.PUBLIC_HTML,__dirname + _.BOWER_DIR]);
+                HttpD.map               ('/cmmnd'                   ,function (req,res,query) {
                     
                     var fn  = query;
                     
@@ -722,14 +733,14 @@
                     }
                 });  
                 
-                httpD.listen(_.LISTEN_PORT );
+                HttpD.listen(_.LISTEN_PORT );
                 
                 //TODO!    
                 //  _.log('Express server listening on '+_.URL_BASE+':'+_.LISTEN_PORT+'/');
 
                 
                 if (!show){
-                 var child=childProc.spawn("cmd",['/C','START',_.URL_BASE+':'+_.LISTEN_PORT, cmd] );
+                 var child=ChildProc.spawn("cmd",['/C','START',_.URL_BASE+':'+_.LISTEN_PORT, cmd] );
                     child.on('error',function (err) { _.err(err);    me.exit(-123);  });
                     child.on('exit', function (code){ _.log(); });
                 }
@@ -740,6 +751,14 @@
              }       
             }
     ;            
+//  ----------------------------------- --------------------------- ---------------------------------
+            Http.head       =   (url, cb)           =>  {                                               //  keep it simple :D
+                var options=Url.parse(url);
+                options.method='HEAD';
+                var req=Http.request(options,cb);
+                    req.end();
+                return req;    
+            }
 //  ----------------------------------- --------------------------- ---------------------------------
 //  ----------------------------------- --------------------------- ---------------------------------
 
@@ -768,7 +787,7 @@
     //  ===================================================== 
 //  ----------------------------------- --------------------------- ---------------------------------
 //  ----------------------------------- --------------------------- ---------------------------------
-    fs.readFile('./full_list.json', function read(err, data) {
+    Fs.readFile('./full_list.json', function read(err, data) {
         if (err){
           _.err("unexpected error",err)
           return;  
@@ -782,7 +801,7 @@
         process.exit(c); 
     })
 //  ----------------------------------- --------------------------- ---------------------------------
-    fs.readFile('package.json', "utf8", (err, data) => {
+    Fs.readFile('package.json', "utf8", (err, data) => {
         if (err) _.log(err);
         else {
             var oo=JSON.parse(data);
@@ -810,7 +829,7 @@
      
 //  ----------------------------------- --------------------------- ---------------------------------
     try {
-     var    child=childProc.spawn(findNodeCommand ,['node','>','whereIsNode'],{  stdio: 'inherit' } );
+     var    child=ChildProc.spawn(findNodeCommand ,['node','>','whereIsNode'],{  stdio: 'inherit' } );
 
             child.on('error',function (err) { _.err(err);    me.exit(-123);  });
             child.on('exit', function (code){ main();                        });

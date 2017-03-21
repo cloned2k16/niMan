@@ -9,10 +9,9 @@
                                     "nim" : "./bin/nim"
                             }    
     ,   "dependencies":   {
-                                    "left_pad"  :   ""
-                                ,   "w4it"      :   ""
-                                ,   "http-d"    :   ""
-                                ,   "request"   :   ""
+                                    "left_pad"      :   ""
+                                ,   "w4it"          :   ""
+                                ,   "http-d"        :   ""
                                 
                             }    
     ,   "scripts"           :   {
