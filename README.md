@@ -10,7 +10,7 @@ WARNING:
   and is it still just intented to be used on Windows ... 
   (as replacement for NVM)
 
-     altough it is working,  
+     although it is working,  
       it still doesn't override the main version of node,  
        you have installed already ,  
         to do so you have to put the 'inuse' folder inside the installation folder,
