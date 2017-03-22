@@ -537,26 +537,30 @@
     ,       do_ACTIVATE     =   (cmd)               =>  {
                 _.log("nodeFolder: '"+nodeFolder+"' nodeStoreDir: '"+nodeStoreDir+"'");
                 var data = Fs.readFileSync('whereIsNode', "utf8")
+                ,   nodeProgPath
                 ,   nodeProgDir
                 ,   nodeFile
                 ;    
+                data        = data.replace('\r','');
                 data        = data.split('\n')[0];
                 data        = data.split('\\');
                 nodeFile    = data.pop();
                 nodeProgDir = data.pop();
+                _.log(data)
                 nodeProgPath= data.join('\\');
                             
-                _.log("whereisNode: "+nodeProgPath+" : "+nodeProgDir);
-
                 activateArgs.push(cmd);
                 activateArgs.push(qtd(nodeProgPath));
                 activateArgs.push(qtd(nodeProgDir));
                 activateArgs.push(nodeFolder.subStr(0,nodeFolder.length-1));
                 activateArgs.push("> activate.log");
 
-                child=ChildProc.spawn(activateCommand ,activateArgs,{ stdio: 'inherit' } );
-                child.on('error',function (err) { _.err(err);    me.exit(-123);  });
-                child.on('exit', function (code){                me.exit(code)   });
+                // TODO Make sure folder inuse exist and is there a working copy of node !!
+                // otherwise we must fall back to our private node copy in './my' folder
+                
+                //child=ChildProc.spawn(activateCommand ,activateArgs,{ stdio: 'inherit' } );
+                //child.on('error',function (err) { _.err(err);    me.exit(-123);  });
+                //child.on('exit', function (code){                me.exit(code)   });
 
                         
             }
