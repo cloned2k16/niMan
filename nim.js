@@ -98,6 +98,9 @@
     ,       copyFileSync    =   (srcFile,trgFile)   =>  {
                 Exec("cmd",["/C","copy",toLocalOs(srcFile),toLocalOs(trgFile)],{  stdio: 'inherit' } );
     }
+    ,       removeDirSync   =   (dirName)           =>  {
+                Exec("cmd",["/C","RMDIR","/S","/Q",toLocalOs(dirName)],{  stdio: 'inherit' } );
+    }
     ,       normalizeVer    =   (ver)               =>  { return (ver ? ver[0]=='v' ? ver : ver[0]=='V'? 'v'+ver.substring(1) : 'v'+ver : 'v_');  }
     ,       normalizeArch   =   (arch)              =>  { return archPrfx+ (arch || myArch); }
     ,       usage           =   ()                  =>  {
@@ -683,21 +686,32 @@
         
             }
     ,       do_REMOVE       =   (cmd,_ver,_arch)    =>  {
-                var ver     = normalizedVer (_ver)
-                ,   arch    = normalizedArch(_arch)
-                ,   vPath   = nodeStoreDir + ver + '/' + arch
+                var i
+                ,   e
+                ,   fileNa
+                ,   ver     = normalizeVer (_ver)
+                ,   arch    = normalizeArch(_arch)
+                ,   baseDir = nodeStoreDir + ver
+                ,   vPath   = baseDir + '/' + arch
                 ;
         
                 
                 _.log('removing: ',vPath);
                 try {
-                    files = Fs.readdirSync(vPath);
+                    try{ files = Fs.readdirSync(vPath); }catch(e){}
+                    
                     for (i in files){
-                        Fs.unlinkSync(vPath+'/'+files[i]);
+                        fileNa=vPath+'/'+files[i];
+                        if (Fs.lstatSync(fileNa).isDirectory()){
+                            removeDirSync(fileNa);
+                        }
+                        else Fs.unlinkSync(fileNa);
                     }         
-                    Fs.rmdirSync  (vPath);
+                    
+                    try { Fs.rmdirSync  (vPath);        }catch(e){}
+                    try { Fs.rmdirSync  (baseDir);      }catch(e){}
                 }
-                catch (ex){ _.err(ex)
+                catch (e){ _.err(e)
                     _.err('not found: ['+ver+'] ('+arch+')');  
                 }    
             }
