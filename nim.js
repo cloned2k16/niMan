@@ -115,7 +115,7 @@
         _.log('   '+NIM+' root       [path]                : Set or Show where all the versions are stored into'               );
         _.log('   '+NIM+' version                          : Shows the version of this tool'                                   );
         _.log('');
-        //_.log('   '+NIM+' on|off                           : Switches NIM version as primary (global) version'                 );
+        _.log('   '+NIM+' on|off                           : Switches NIM version as primary (global) version'                 );
         _.log('   '+NIM+' gui                              : Start an useful graphical interface (web)                       ' );
         
     }
@@ -535,7 +535,29 @@
                 }
             }        
     ,       do_ACTIVATE     =   (cmd)               =>  {
-                _.log("nodeFolder: '"+nodeFolder+"' nodeStoreDir: '"+nodeStoreDir+"'");
+                
+                if (!Fs.existsSync(nodeFolder)){
+                    _.err("You need to have a node version in use before activation ...\n try to call 'nim use <version>' before");
+                    return;
+                }
+                
+                try{
+                    
+                    var ver=Exec("cmd",["/C",toLocalOs(nodeFolder+'node'),"--version"] ).toString()
+                    ,   vtk=ver.trim().split(/\./)        
+                    ;
+                    if (vtk[0].startsWith('v') && vtk.length==3){
+                        _.log('working version:',ver);
+                    }
+                    else {
+                        _.err('sorry! ,the folder:',nodeFolder,"doesn't look like it contain a working version!");
+                        return;
+                    }
+                    
+                }
+                catch (e){ _.err(e); return; }
+                
+                
                 var data = Fs.readFileSync('whereIsNode', "utf8")
                 ,   nodeProgPath
                 ,   nodeProgDir
@@ -546,21 +568,25 @@
                 data        = data.split('\\');
                 nodeFile    = data.pop();
                 nodeProgDir = data.pop();
-                _.log(data)
+                if (data.join('\\') == me.cwd()){
+                    _.err('sorry! ,looks like we are already switched on!');
+                    return;
+                }
                 nodeProgPath= data.join('\\');
-                            
+                
                 activateArgs.push(cmd);
                 activateArgs.push(qtd(nodeProgPath));
                 activateArgs.push(qtd(nodeProgDir));
                 activateArgs.push(nodeFolder.subStr(0,nodeFolder.length-1));
                 activateArgs.push("> activate.log");
 
-                // TODO Make sure folder inuse exist and is there a working copy of node !!
-                // otherwise we must fall back to our private node copy in './my' folder
+                // it should be safe here to switch to our 'inuse' version ..
                 
-                //child=ChildProc.spawn(activateCommand ,activateArgs,{ stdio: 'inherit' } );
-                //child.on('error',function (err) { _.err(err);    me.exit(-123);  });
-                //child.on('exit', function (code){                me.exit(code)   });
+                return; //  we need some more test, and a rollback plan !
+                
+                child=ChildProc.spawn(activateCommand ,activateArgs,{ stdio: 'inherit' } );
+                child.on('error',function (err) { _.err(err);    me.exit(-123);  });
+                child.on('exit', function (code){                me.exit(code)   });
 
                         
             }

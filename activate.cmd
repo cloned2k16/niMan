@@ -45,6 +45,7 @@ if %errorlevel% == 0 goto   BCKP_EXIST
 echo renaming link ..
 ren  %fullPath% %target_bckp%
 goto MK_NEW_LINK
+
 :BCKP_EXIST
 echo backup exist
 echo removing link .. %fullPath%
