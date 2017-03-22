@@ -11,11 +11,13 @@ WARNING:
   (as replacement for NVM)
 
     although it is already working,  
-     it still doesn't override your main version of node, that you have already installed (which lets this one was able to boot),  
+     it still doesn't override your main version of node, that you have already installed  
+      (which lets this one was able to boot),  
       In order to have NIM take over, 
        you have to put the 'inuse' folder (which is inside the installation folder),
         inside the PATH environment variable, and make sure it comes before your original node installation path, 
-         finally, if you installed it with NPM you may whant to use 'nim root' command, to know where actually is such folder .. 
+         finally, if you installed it with NPM you may whant to use 'nim root' command,  
+          to know where actually is such folder .. 
 :D
 
 # Installation - Usage
