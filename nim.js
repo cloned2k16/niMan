@@ -536,6 +536,34 @@
             }        
     ,       do_ACTIVATE     =   (cmd)               =>  {
                 
+                var data = Fs.readFileSync('whereIsNode', "utf8")
+                ,   nodeProgPath
+                ,   nodeProgDir
+                ,   nodeFile
+                ,   nodeBasePath
+                ;    
+                data        = data.replace('\r','');
+                data        = data.split('\n')[0];
+                data        = data.split(pathSep);
+                nodeFile    = data.pop();
+                nodeProgDir = data.pop();
+                nodeBasePath= data.join(pathSep);
+                // OFF ------------------------------------------------------------------------------
+                if (cmd!=='on'){
+                    _.log('switching NIM off ..');    
+                    if ( nodeBasePath == me.cwd()){
+                        _.log('ok node does point here, so here we go ..');
+                    }
+                    else {
+                        _.err('sorry , node found somewere else .. ->',nodeBasePath+pathSep+nodeProgDir);
+                        return;
+                    }
+                    
+                    
+                    return;                                                                             // get out we are done here!
+                }
+                
+                // ON  ------------------------------------------------------------------------------
                 if (!Fs.existsSync(nodeFolder)){
                     _.err("You need to have a node version in use before activation ...\n try to call 'nim use <version>' before");
                     return;
@@ -558,21 +586,11 @@
                 catch (e){ _.err(e); return; }
                 
                 
-                var data = Fs.readFileSync('whereIsNode', "utf8")
-                ,   nodeProgPath
-                ,   nodeProgDir
-                ,   nodeFile
-                ;    
-                data        = data.replace('\r','');
-                data        = data.split('\n')[0];
-                data        = data.split('\\');
-                nodeFile    = data.pop();
-                nodeProgDir = data.pop();
-                if (data.join('\\') == me.cwd()){
+                if (nodeBasePath == me.cwd()){
                     _.err('sorry! ,looks like we are already switched on!');
                     return;
                 }
-                nodeProgPath= data.join('\\');
+                nodeProgPath= data.join(pathSep);
                 
                 activateArgs.push(cmd);
                 activateArgs.push(qtd(nodeProgPath));
@@ -580,6 +598,10 @@
                 activateArgs.push(nodeFolder.subStr(0,nodeFolder.length-1));
                 activateArgs.push("> activate.log");
 
+                Fs.writeFile('original.node.folder', nodeProgPath+pathSep+nodeProgDir , "utf8", ()=>{
+                    _.log('backup info done');
+                });
+                
                 // it should be safe here to switch to our 'inuse' version ..
                 
                 return; //  we need some more test, and a rollback plan !
@@ -622,17 +644,11 @@
                     try {
 
                         try { Fs.rmdirSync   (nodeFolder); } catch(e) { }
-                        var slsh = /\//g
-                        ,   bsls = '\\'  
-                        ,   child
-                        ;
 
-                        //    
-                        symLinkArgs.push(nodeFolder   .replace(slsh,bsls));
-                        symLinkArgs.push(vPath        .replace(slsh,bsls));
-                        child=ChildProc.spawn(symLinkCommand ,symLinkArgs,{  stdio: 'inherit' } );
-                        child.on('error',function (err) { _.err(err);    me.exit(-123);  });
-                        child.on('exit', function (code){                me.exit(code)   });
+                        symLinkArgs.push(toLocalOs(nodeFolder));
+                        symLinkArgs.push(toLocalOs(vPath));
+                        var out=Exec(symLinkCommand ,symLinkArgs);
+                        _.log(out.toString());                                                          // TODO check result here !!
                     }
                     catch (ex){ _.err(ex); }
                 }
