@@ -913,7 +913,7 @@
             else if ('root'     .startsWith(cmd))   do_ROOT     (cmd,args[1]);
             else if ('on'     == cmd 
                   || 'off'    == cmd)               do_ACTIVATE (cmd);                                  // activate deactivate globally
-            else if (ND.x) {}                                                                           // force error
+            else                                    usage();
         }
         catch (ex) { //_.err(ex);
             if (!ex.message.startsWith("Cannot read property 'x'")) _.err(ex);

@@ -191,6 +191,7 @@
                 }
                 catch (err){ exit("sorry can't install NPM:",err.message); }
                 
+                // TODO check this step !!!
                 if (!fs.existsSync(distFolder+myNodeVer)){
                     _log('put my own node version in list ..');
                     try {
