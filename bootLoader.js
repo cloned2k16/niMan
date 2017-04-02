@@ -20,7 +20,7 @@
     ,   myNodeFile2                                                                                     //  windows only
     ,   myNodePath      =   'my'
     ,   myNodeFileExt                                                                                   //  windows only ?
-    ,   myNodeVer       =   'v6.10.0'                                                                   //  LTS Boron
+    ,   myNodeVer       =   'v6.10.1'                                                                   //  LTS Boron
     ,   myNPM           =   'v3.10.10'
     ,   npmExtractPath
     ,   npmPath
