@@ -19,7 +19,14 @@ WARNING:
          finally, if you installed it with NPM you may whant to use 'nim root' command,  
           to know where actually is such folder .. 
 :D
-
+## issues
+ please note that some version of NPN version has a much too long path name in his dependencies  
+ and that added to an already long path in your current NPM installation  
+(which is the root of the niMan)  
+ will broke the installation itself ...   
+ I'll fixi it ASAP by let you chose a root folder which has to better have a very short path name to prevent   
+ such silly dep dependencies   
+ 
 # Installation - Usage
 
 
