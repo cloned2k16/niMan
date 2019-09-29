@@ -82,7 +82,8 @@
     ,       iojsCacheList   =   'iojs_dist.lst'
     ,       nodeDistBase    =   'https://nodejs.org/dist/'
     ,       iojsDistBase    =   'https://iojs.org/dist/'
-    ,       npmDistBase     =   'https://codeload.github.com/npm/npm/zip/'
+    ///,       npmDistBase     =   'https://codeload.github.com/npm/npm/zip/'
+	,       npmDistBase     =   'https://registry.npmjs.org/npm/-/npm-'  // + .tgz
     ,       toLocalOs       =   (s)                 =>  {
                 switch (isOS){
                     case    'x86':
@@ -174,7 +175,7 @@
                         file.on('error', (err) => { endErr(err); });
                      }
                      
-                    var fName   = npmVer+'.zip'
+                    var fName   = npmVer//+'.zip'
                     ,   fPath   = dir+'/'+fName
                     ;
                      if (!Fs.existsSync(fPath)){
@@ -182,7 +183,8 @@
                         _.log('downloading.. ',npmUrl+'v'+npmVer,' into: ',fPath);
                         var  file    = Fs.createWriteStream(fPath)
                         ,    endErr  = ((ii,p) => { return (err) => { _.log('endErr',err,ii); Fs.unlink(p); inProg[ii]=false; }})(i,fPath)
-                        ,    req     = Http.get(npmUrl+'v'+npmVer, ((f,p,ii) => { return (res) =>{
+                        //,    req     = Http.get(npmUrl+'v'+npmVer, ((f,p,ii) => { return (res) =>{
+							,    req     = Http.get(npmUrl+npmVer, ((f,p,ii) => { return (res) =>{
                             if (res.statusCode !== 200) {
                                 Fs.unlink(p); 
                                 return _.err('NPM status was ' + res.statusCode);
@@ -206,21 +208,28 @@
                       return true;
                      }   
                      , () =>{
-                        var npmDir=dir+'/node_modules' 
-                        ,   npmTempPath =   npmDir+'/npm-'+npmVer
-                        ,   npmPath     =   npmDir+'/npm'
+                        var npmDir		=	dir +'/node_modules' 
+                        ,   npmTempPath =   npmDir +'/package'
+                        ,   npmPath     =   npmDir +'/npm'
                         ;
 
                         _.log('DONE');
                         _.log('unzipping NPM in ',npmTempPath)
                         try {
-                            Exec("cmd"    ,[ "/C","RMDIR","/S","/Q", toLocalOs(npmPath)     ]  ,{  stdio: 'inherit' } )
-                            Exec("cmd"    ,[ "/C","RMDIR","/S","/Q", toLocalOs(npmTempPath) ]  ,{  stdio: 'inherit' } )
+							if (Fs.existsSync(npmPath))
+								Exec("cmd"    ,[ "/C","RMDIR","/S","/Q", toLocalOs(npmPath)     ]  ,{  stdio: 'inherit' } )
+							if (Fs.existsSync(npmTempPath))
+								Exec("cmd"    ,[ "/C","RMDIR","/S","/Q", toLocalOs(npmTempPath) ]  ,{  stdio: 'inherit' } )
                         }
                         catch(ee){ 
                             //_.err("error:",ee.message); 
                         }
-                        Exec("xtract",[  fPath,   npmDir   ]       ,{  stdio: 'inherit' } )
+                        //Exec("xtract",[  fPath,   npmDir   ]       ,{  stdio: 'inherit' } )
+						Fs.mkdirSync(npmDir)
+						//var newDir=npmDir.replace(/\//g,'\\')
+						//_.log("mkdir: "+newDir)
+						//Exec("md" ,[newdir]								,	{  stdio: 'inherit' } )
+						Exec("tar",[ '-xf', fPath, '-C',  npmDir   ]    ,	{  stdio: 'inherit' } )
                          
                         Fs.renameSync   (npmTempPath,npmPath);
                         copyFileSync    (npmPath+'/bin/npm'       ,dir+'/npm');
@@ -719,7 +728,8 @@
                             for (a in archs) {
                                 vDir=vPath+archs[a];   
                                 downloadFiles(urlBase+vDir,nodeStoreDir+vDir,requires
-                                            ,npmDistBase,NPMv  );
+                                            //,npmDistBase,NPMv );
+											,npmDistBase,NPMv + '.tgz' );
                             }
                         }
                         else {
@@ -729,7 +739,7 @@
                     }).on('error',(err) => { _.err(err); } );
                 }
                 catch(ex){ _.err(ex.message); me.exit(66); }
-        
+				_.log("exit install")
             }
     ,       do_REMOVE       =   (cmd,_ver,_arch)    =>  {
                 var i
