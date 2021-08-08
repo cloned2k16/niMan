@@ -3,6 +3,8 @@
 [![npm version](https://badge.fury.io/js/niman.svg)](https://badge.fury.io/js/niman)    
 [![NPM](https://nodei.co/npm/niman.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/niman/)  
 
+BTW .. the version graph viewer you see below is here https://njs.yaoo.net/  
+
 WARNING:
 
   BETA release so don't expect it to work bugless ..
